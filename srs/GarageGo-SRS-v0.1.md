@@ -2,7 +2,7 @@
 
 **Document Version:** v0.1  
 **Date:** 2026-05-22  
-**Authors:** P. Kasturi  , K. Kajaluxmy   
+**Authors:** P. Kasturi  , K. Kajaluxmy  , V.Vanushan  
 **Status:** Draft — Sprint 2 Requirements Engineering  
 **Project:** GarageGo – Smart Garage & Emergency Repair Platform  
 **Course:** SENG 31242 System Design Project  
@@ -28,7 +28,12 @@
    2.4 Design and Implementation Constraints  
    2.5 Assumptions and Dependencies  
 
-3. System Analysis *[To be completed ]*
+3. System Analysis and Use-Case Modelling
+   3.1 Existing System Analysis
+   3.2 Use-Case Diagram
+   3.3 Use-Case Descriptions
+   3.4 Activity Diagrams
+   3.5 Diagram Storage Structure
    
 4. Functional Requirements   
    4.1 Overview   
@@ -233,6 +238,505 @@ The system operates as a multi-sided platform with four primary client applicati
 6. **External API Stability:** Third-party service providers (mapping, notifications, SMS) maintain their current API contracts, pricing, and service levels during the development period.
 
 7. **User Authentication:** All users complete phone OTP verification during registration. Email verification is optional for customers but mandatory for garage owners.
+
+---
+
+
+
+# 3. System Analysis and Use-Case Modelling
+
+## 3.1 Existing System Analysis
+
+Currently, vehicle owners in Sri Lanka mainly rely on manual methods to locate garages, mechanics, and roadside assistance services. Customers usually contact garages through phone calls, Facebook pages, WhatsApp messages, or personal recommendations. During emergencies such as vehicle breakdowns, users often struggle to quickly locate nearby mechanics who are available at that moment. Most garages also do not maintain a centralized booking or tracking system, causing delays, communication failures, and customer dissatisfaction.
+
+One major pain point identified during interviews is the absence of real-time garage availability information. Customers cannot determine whether a garage has available service slots before visiting or contacting them. This frequently results in long waiting times, unnecessary travel, and wasted fuel.
+
+Another significant issue is the lack of emergency dispatch coordination. In roadside breakdown situations, customers must manually contact multiple garages or mechanics individually. There is no automated dispatching mechanism that identifies the nearest available mechanic and assigns the request immediately.
+
+A third issue is the lack of transparent pricing and service tracking. Customers are often unaware of estimated repair costs, service progress, or repair history. This creates trust issues between vehicle owners and garages.
+
+Additionally, many small and medium-scale garages struggle with customer management, booking organization, and service scheduling because they still rely on notebooks, paper records, and informal communication methods. GarageGo addresses these limitations by providing a centralized digital platform for garage discovery, emergency roadside assistance, booking management, and live mechanic tracking.
+
+---
+
+## 3.2 Use-Case Diagram
+
+### System Boundary
+**GarageGo Platform**
+
+### Actors
+
+| Actor | Description |
+|---|---|
+| Customer | Vehicle owner using the platform |
+| Garage Owner | Garage manager handling bookings and emergencies |
+| Mechanic | Mechanic assigned to repair and emergency tasks |
+| Admin | Platform administrator |
+| Google Maps API | External mapping and GPS service |
+| OTP Service | External SMS verification service |
+| Email Service | External email notification service |
+
+### Customer Use Cases
+
+- Register Account
+- Add Vehicle
+- Search Garages
+- Book Service
+- Cancel Booking
+- Trigger Emergency SOS
+- Track Mechanic
+- View Service History
+- Rate Garage
+
+### Garage Owner Use Cases
+
+- Register Garage
+- Accept Booking
+- Reject Booking
+- Start Service
+- Complete Service
+- Accept Emergency
+- Dispatch Mechanic
+- View Analytics
+
+### Mechanic Use Cases
+
+- Send Location Update
+- Mark Arrived
+- Mark Complete
+
+### Admin Use Cases
+
+- Approve Garage
+- Suspend Account
+- Resolve Complaint
+- View System Analytics
+
+### External System Interactions
+
+- Google Maps API
+- OTP Service
+- Email Service
+
+---
+
+## 3.3 Use-Case Descriptions
+
+---
+
+### UC-01 – Register Account
+
+| Field | Content |
+|---|---|
+| Use Case ID | UC-01 |
+| Use Case Name | Register Account |
+| Actor(s) | Customer, Garage Owner, Admin, OTP Service, Email Service |
+| Preconditions | User has installed the application and has internet access |
+| Postconditions – Success | User account is created and verified successfully |
+| Postconditions – Failure | Account is not created; validation or verification error displayed |
+
+#### Main Flow
+1. User opens registration screen.  
+2. User enters personal details.  
+3. User enters phone number and email address.  
+4. System validates entered information.  
+5. System sends OTP to phone number.  
+6. User enters OTP.  
+7. System verifies OTP and email.  
+8. System creates account and logs user in.  
+
+#### Alternative Flow 1
+- At step 4: If email or phone number already exists, system displays duplicate account message.
+
+#### Alternative Flow 2
+- At step 6: If OTP is invalid or expired, system requests a new OTP.
+
+#### Business Rules
+- BR-01: Phone verification is mandatory.  
+- BR-02: Email verification is required.  
+- BR-03: Password must meet security requirements.  
+
+---
+
+### UC-02 – Add Vehicle
+
+| Field | Content |
+|---|---|
+| Use Case ID | UC-02 |
+| Use Case Name | Add Vehicle |
+| Actor(s) | Customer |
+| Preconditions | Customer is logged into the system |
+| Postconditions – Success | Vehicle is added to customer profile |
+| Postconditions – Failure | Vehicle record is not saved |
+
+#### Main Flow
+1. Customer opens vehicle management section.  
+2. Customer selects “Add Vehicle”.  
+3. Customer enters vehicle details.  
+4. System validates registration number and required fields.  
+5. Customer submits form.  
+6. System stores vehicle information successfully.  
+
+#### Alternative Flow 1
+- At step 4: If registration number already exists under another account, system displays error message.
+
+#### Alternative Flow 2
+- At step 3: Customer may optionally add notes and photos.
+
+#### Business Rules
+- BR-04: Each vehicle must have a unique registration number.  
+- BR-05: Vehicle type must match supported categories.  
+
+---
+
+### UC-03 – Search Garages
+
+| Field | Content |
+|---|---|
+| Use Case ID | UC-03 |
+| Use Case Name | Search Garages |
+| Actor(s) | Customer, Google Maps API |
+| Preconditions | Customer is logged in and location access is enabled |
+| Postconditions – Success | Matching garages are displayed on map and list |
+| Postconditions – Failure | No garages displayed or location retrieval fails |
+
+#### Main Flow
+1. Customer opens garage search page.  
+2. System retrieves customer location.  
+3. Customer applies filters if needed.  
+4. System queries nearby approved garages.  
+5. System displays garages with ratings and availability.  
+
+#### Alternative Flow 1
+- At step 2: If GPS permission is denied, system requests manual location entry.
+
+#### Alternative Flow 2
+- At step 4: If no garages are found, system displays “No nearby garages available”.
+
+#### Business Rules
+- BR-06: Only approved garages are shown.  
+- BR-07: Results are sorted by distance and availability.  
+
+---
+
+### UC-04 – Book Service
+
+| Field | Content |
+|---|---|
+| Use Case ID | UC-04 |
+| Use Case Name | Book Service |
+| Actor(s) | Customer, Garage Owner |
+| Preconditions | Customer is logged in and has at least one registered vehicle |
+| Postconditions – Success | Booking request is created and notification sent to garage owner |
+| Postconditions – Failure | Booking is not created |
+
+#### Main Flow
+1. Customer selects a garage.  
+2. Customer selects vehicle and required service.  
+3. Customer chooses date and time.  
+4. System calculates estimated cost.  
+5. Customer confirms booking.  
+6. System creates booking request and sends notification to garage owner.  
+
+#### Alternative Flow 1
+- At step 3: If selected slot is unavailable, system requests another time slot.
+
+#### Business Rules
+- BR-08: Garage owner must respond within two hours.  
+- BR-09: Booking status initially becomes “Pending”.  
+
+---
+
+### UC-05 – Cancel Booking
+
+| Field | Content |
+|---|---|
+| Use Case ID | UC-05 |
+| Use Case Name | Cancel Booking |
+| Actor(s) | Customer |
+| Preconditions | Customer has an active booking |
+| Postconditions – Success | Booking is cancelled and a penalty added for the next booking |
+| Postconditions – Failure | Booking remains active |
+
+#### Main Flow
+1. Customer opens booking details.  
+2. Customer selects “Cancel Booking”.  
+3. System checks cancellation policy.  
+4. System cancels booking.  
+5. Customer receives cancellation confirmation.  
+
+#### Alternative Flow 1
+- At step 3: If garage already accepted booking, cancellation fee may apply.
+
+#### Alternative Flow 2
+- At step 4: If booking is already in service, cancellation is rejected.
+
+#### Business Rules
+- BR-10: Cancellation fee applies after acceptance.  
+- BR-11: Outstanding balances are added to future invoices.  
+
+---
+
+### UC-06 – Trigger Emergency SOS
+
+| Field | Content |
+|---|---|
+| Use Case ID | UC-06 |
+| Use Case Name | Trigger Emergency SOS |
+| Actor(s) | Customer, Garage Owner, Google Maps API |
+| Preconditions | Customer is logged in and location services are enabled |
+| Postconditions – Success | Emergency request is broadcast to nearby garages |
+| Postconditions – Failure | Emergency request is not created |
+
+#### Main Flow
+1. Customer presses SOS button.  
+2. Customer selects affected vehicle.  
+3. Customer enters issue description.  
+4. System retrieves GPS location.  
+5. System identifies nearby approved garages.  
+6. Emergency alert is sent to eligible garages.  
+7. First accepting garage is assigned.  
+
+#### Alternative Flow 1
+- At step 4: If location cannot be retrieved, system asks for manual location selection.
+
+#### Alternative Flow 2
+- At step 7: If no garage accepts within sixty seconds, system expands search radius.
+
+#### Business Rules
+- BR-12: Only garages with emergency coverage receive alerts.  
+- BR-13: First accepted request wins assignment.  
+
+---
+
+### UC-07 – Track Mechanic
+
+| Field | Content |
+|---|---|
+| Use Case ID | UC-07 |
+| Use Case Name | Track Mechanic |
+| Actor(s) | Customer, Mechanic, Google Maps API |
+| Preconditions | Emergency request has been accepted |
+| Postconditions – Success | Customer receives live mechanic location updates |
+| Postconditions – Failure | Live tracking unavailable |
+
+#### Main Flow
+1. Mechanic starts navigation.  
+2. Mechanic app sends GPS updates.  
+3. System updates mechanic location in real time.  
+4. Customer views mechanic location on map.  
+5. Customer receives arrival notifications.  
+
+#### Alternative Flow 1
+- At step 2: If internet connection is lost, location updates pause temporarily.
+
+#### Alternative Flow 2
+- At step 4: Customer can refresh tracking manually.
+
+#### Business Rules
+- BR-14: GPS updates are sent every few seconds.  
+- BR-15: Tracking is only available for active emergencies.  
+
+---
+
+### UC-08 – View History
+
+| Field | Content |
+|---|---|
+| Use Case ID | UC-08 |
+| Use Case Name | View History |
+| Actor(s) | Customer |
+| Preconditions | Customer is logged in |
+| Postconditions – Success | Service history and invoices are displayed |
+| Postconditions – Failure | History cannot be retrieved |
+
+#### Main Flow
+1. Customer opens history section.  
+2. System retrieves completed bookings.  
+3. System displays invoices and service details.  
+4. Customer selects a specific record for more details.  
+
+#### Alternative Flow 1
+- At step 2: If no history exists, system displays empty history message.
+
+#### Alternative Flow 2
+- Customer may filter records by vehicle or date.
+
+#### Business Rules
+- BR-16: Only completed and paid services appear in history.  
+
+---
+
+### UC-09 – Rate Garage
+
+| Field | Content |
+|---|---|
+| Use Case ID | UC-09 |
+| Use Case Name | Rate Garage |
+| Actor(s) | Customer |
+| Preconditions | Customer completed a service |
+| Postconditions – Success | Rating and review are saved |
+| Postconditions – Failure | Review is not submitted |
+
+#### Main Flow
+1. Customer opens completed booking.  
+2. Customer selects rating score.  
+3. Customer enters optional review.  
+4. Customer submits feedback.  
+5. System stores rating and updates garage score.  
+
+#### Alternative Flow 1
+- At step 3: Customer may skip written review.
+
+#### Alternative Flow 2
+- If offensive language is detected, system rejects review.
+
+#### Business Rules
+- BR-17: Ratings range from 1 to 5 stars.  
+- BR-18: Only customers with completed bookings may review.  
+
+---
+
+### UC-10 – Register Garage
+
+| Field | Content |
+|---|---|
+| Use Case ID | UC-10 |
+| Use Case Name | Register Garage |
+| Actor(s) | Garage Owner, Admin |
+| Preconditions | Garage owner account exists |
+| Postconditions – Success | Garage registration is submitted for approval |
+| Postconditions – Failure | Garage registration is not saved |
+
+#### Main Flow
+1. Garage owner opens registration form.  
+2. Owner enters business details.  
+3. Owner uploads required documents and photos.  
+4. System validates submitted data.  
+5. Owner submits application.  
+6. System marks garage status as pending approval.  
+
+#### Alternative Flow 1
+- At step 4: If required documents are missing, system displays validation error.
+
+#### Alternative Flow 2
+- Admin may later reject registration with a reason.
+
+#### Business Rules
+- BR-19: Only approved garages are visible to customers.  
+- BR-20: Registration number must be unique.  
+
+---
+
+
+## 3.4 Activity Diagrams
+
+### AD1 – UC-06 Emergency SOS Dispatch
+
+#### Flow
+- SOS Trigger
+- Capture GPS
+- Validate Eligibility
+- Find Nearby Garages
+- Broadcast Emergency Request
+- Wait 60 Seconds
+- First Accept Wins
+- Assign Garage
+- Dispatch Mechanic
+- Track Mechanic
+- Complete Emergency
+
+---
+
+### AD2 – UC-15 Accept Emergency SOS
+
+#### Flow
+- Receive Emergency Alert
+- Review Request
+- Accept Request
+- Lock Assignment
+- Allocate Mechanic
+- Navigate to Customer
+- Update Live Location
+- Arrive at Customer Location
+- Complete Repair
+
+---
+
+### AD3 – UC-04 Book Service
+
+#### Flow
+- Search Garage
+- Select Garage
+- Select Service
+- Choose Time Slot
+- Validate Capacity
+- Create Booking
+- Start 2-Hour Response Timer
+- Accept or Reject Booking
+- Send Confirmation
+
+---
+
+### AD4 – UC-05 Cancel Booking
+
+#### Flow
+- Open Booking
+- Validate Booking Status
+- Evaluate Cancellation Policy
+- Calculate Penalty
+- Confirm Cancellation
+- Update Booking Status
+- Apply Restrictions if Required
+
+---
+
+### AD5 – UC-21 Admin Garage Approval
+
+#### Flow
+- Receive Garage Registration
+- Review Documents
+- Verify Business Information
+- Request Additional Information
+- Approve or Reject Garage
+- Notify Garage Owner
+
+---
+
+
+## 3.5 Diagram Storage Structure
+
+```text
+documents/
+└── diagrams/
+    ├── use-case-diagram/
+    │   ├── UseCaseDiagram.drawio
+    │   └── UseCaseDiagram.png
+    │
+    └── activity-diagrams/
+        ├── AD_01.puml
+        ├── AD_01.png
+        ├── AD_02.puml
+        ├── AD_02.png
+        ├── AD_03.puml
+        ├── AD_03.png
+        ├── AD_04.puml
+        ├── AD_04.png
+        ├── AD_05.puml
+        └── AD_05.png
+```
+
+### Activity Diagram Mapping
+
+| Diagram ID | Description |
+|---|---|
+| AD_01 | UC-06 Emergency SOS Dispatch |
+| AD_02 | UC-15 Accept Emergency SOS |
+| AD_03 | UC-04 Book Service |
+| AD_04 | UC-05 Cancel Booking |
+| AD_05 | UC-21 Admin Garage Approval |
+
+
 
 ---
 
