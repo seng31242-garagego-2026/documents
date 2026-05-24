@@ -2,7 +2,7 @@
 
 **Document Version:** v0.1  
 **Date:** 2026-05-22  
-**Authors:** P. Kasturi  , K. Kajaluxmy  , V.Vanushan  
+**Authors:** P. Kasturi  , K. Kajaluxmy  , V. Vanushan  
 **Status:** Draft — Sprint 2 Requirements Engineering  
 **Project:** GarageGo – Smart Garage & Emergency Repair Platform  
 **Course:** SENG 31242 System Design Project  
@@ -28,12 +28,13 @@
    2.4 Design and Implementation Constraints  
    2.5 Assumptions and Dependencies  
 
-3. System Analysis and Use-Case Modelling
-   3.1 Existing System Analysis
-   3.2 Use-Case Diagram
-   3.3 Use-Case Descriptions
-   3.4 Activity Diagrams
-   3.5 Diagram Storage Structure
+3. System Analysis and Use-Case Modelling  
+   3.1 Existing System Analysis  
+   3.2 Use-Case Diagram  
+   3.3 Use-Case Descriptions  
+   3.4 Activity Diagrams  
+   3.5 System Sequence Diagrams   
+   3.6 Context Diagrams   
    
 4. Functional Requirements   
    4.1 Overview   
@@ -704,7 +705,49 @@ Additionally, many small and medium-scale garages struggle with customer managem
 ---
 
 
-## 3.5 Diagram Storage Structure
+## 3.5 System Sequence Diagrams
+
+This section presents the system sequence diagrams (SSDs) for the three major use cases of the GarageGo platform. Each SSD illustrates the message flows between actors and internal system components, including synchronous and asynchronous interactions, loop frames, and alternative frames where applicable. All diagrams are cross-referenced to their corresponding use-case descriptions in Section 3.3.
+
+---
+
+### SSD-01 — Emergency SOS Full Flow
+
+This diagram shows the full message flow from the moment a customer triggers an emergency SOS to the point where the mechanic's live GPS location is streamed back to the customer. It covers the API broadcast to eligible garages via Socket.io, the first-accept-wins assignment with a SELECT FOR UPDATE database lock, mechanic dispatch, and the real-time location loop.
+
+- **PNG:** `documents/diagrams/sequence-diagrams/Emergency SOS Sequence diagram.drawio.png`
+- **PlantUML:** `documents/diagrams/sequence-diagrams/Emergency SOS.puml`
+
+---
+
+### SSD-02 — Booking Flow
+
+This diagram covers the booking lifecycle from the customer's initial POST request through capacity validation, booking creation, garage notification via FCM push, and the garage owner's accept or reject response. It includes the booking state transitions (pending → accepted → in_service) and the corresponding customer notifications via Socket.io.
+
+- **PNG:** `documents/diagrams/sequence-diagrams/Booking Flow.drawio.png`
+- **PlantUML:** `documents/diagrams/sequence-diagrams/Booking Flow.puml`
+
+---
+
+### SSD-03 — Mechanic GPS Tracking
+
+This diagram details the real-time GPS tracking flow during an active emergency. It includes the loop frame for mechanic location updates every 5 seconds via Socket.io and an alternative frame for the signal-loss scenario where tracking is paused after 30 seconds of no updates and resumed upon reconnection.
+
+- **PNG:** `documents/diagrams/sequence-diagrams/Mechanic Tracking GPS.drawio.png`
+- **PlantUML:** `documents/diagrams/sequence-diagrams/Mechanic Tracking.puml`
+
+---
+
+## 3.6 System Context Diagram
+
+The context diagram defines the GarageGo system boundary and shows all external actors (Customer, Garage Owner/Mechanic, System Admin) and external services (Email Service, Twilio, Google Maps Platform, External Messaging System) and their interactions with the internal components (API Server, Admin Dashboard, Customer App, Garage/Mechanic App).
+
+- **PNG:** `documents/diagrams/context-diagram/Context Diagram.drawio.png`
+- **PlantUML:** `documents/diagrams/context-diagram/context-diagram.puml`
+
+---
+
+### Diagram Storage Structure
 
 ```text
 documents/
@@ -713,28 +756,47 @@ documents/
     │   ├── UseCaseDiagram.drawio
     │   └── UseCaseDiagram.png
     │
-    └── activity-diagrams/
-        ├── AD_01.puml
-        ├── AD_01.png
-        ├── AD_02.puml
-        ├── AD_02.png
-        ├── AD_03.puml
-        ├── AD_03.png
-        ├── AD_04.puml
-        ├── AD_04.png
-        ├── AD_05.puml
-        └── AD_05.png
+    ├── activity-diagrams/
+    │   ├── AD_01.puml
+    │   ├── AD_01.png
+    │   ├── AD_02.puml
+    │   ├── AD_02.png
+    │   ├── AD_03.puml
+    │   ├── AD_03.png
+    │   ├── AD_04.puml
+    │   ├── AD_04.png
+    │   ├── AD_05.puml
+    │   └── AD_05.png
+    │
+    ├── context-diagram/
+    │   ├── Context Diagram.drawio.png
+    │   └── context-diagram.puml
+    │
+    └── sequence-diagram/
+        ├── Emergency SOS Sequence diagram.drawio.png
+        ├── Emergency SOS.puml
+        ├── Booking Flow.drawio.png
+        ├── Booking Flow.puml
+        ├── Mechanic Tracking GPS.drawio.png
+        └── Mechanic Tracking.puml
 ```
 
-### Activity Diagram Mapping
+### Diagram Summary
 
-| Diagram ID | Description |
-|---|---|
-| AD_01 | UC-06 Emergency SOS Dispatch |
-| AD_02 | UC-15 Accept Emergency SOS |
-| AD_03 | UC-04 Book Service |
-| AD_04 | UC-05 Cancel Booking |
-| AD_05 | UC-21 Admin Garage Approval |
+| Folder | Diagram | PNG File | PlantUML Source | UC Reference |
+|---|---|---|---|---|
+| `use-case-diagram/` | Use Case Diagram | UseCaseDiagram.png | UseCaseDiagram.drawio | All UCs |
+| `activity-diagrams/` | Emergency SOS Dispatch | AD_01.png | AD_01.puml | UC-06 |
+| `activity-diagrams/` | Accept Emergency SOS | AD_02.png | AD_02.puml | UC-15 |
+| `activity-diagrams/` | Book Service | AD_03.png | AD_03.puml | UC-04 |
+| `activity-diagrams/` | Cancel Booking | AD_04.png | AD_04.puml | UC-05 |
+| `activity-diagrams/` | Admin Garage Approval | AD_05.png | AD_05.puml | UC-21 |
+| `context-diagram/` | System Context Diagram | Context Diagram.drawio.png | context-diagram.puml | Section 2.1 |
+| `sequence-diagram/` | Emergency SOS Full Flow | Emergency SOS Sequence diagram.drawio.png | Emergency SOS.puml | UC-06, UC-07 |
+| `sequence-diagram/` | Booking Flow | Booking Flow.drawio.png | Booking Flow.puml | UC-04, UC-05 |
+| `sequence-diagram/` | Mechanic GPS Tracking | Mechanic Tracking GPS.drawio.png | Mechanic Tracking.puml | UC-07 |
+
+
 
 
 
