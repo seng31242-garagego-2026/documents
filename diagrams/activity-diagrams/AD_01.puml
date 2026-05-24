@@ -1,0 +1,59 @@
+@startuml
+title UC-06 Emergency SOS Dispatch - Activity Diagram
+
+|Customer|
+start
+:Press SOS Button;
+
+|System|
+:Request GPS Location;
+
+|Google Maps API|
+:Provide GPS Coordinates;
+
+|System|
+:Capture Current Location;
+
+|Customer|
+:Select Vehicle;
+:Enter Issue Description;
+
+|System|
+:Identify Nearby Approved Garages;
+:Filter Garages by Coverage and Availability;
+:Broadcast Emergency Alert;
+:Start 60-Second Acceptance Timer;
+
+while (Garage Accepted?) is (No)
+
+  :Expand Search Radius;
+  :Retry Emergency Broadcast;
+
+endwhile (Yes)
+
+:System Assigns Emergency to First Accepted Garage;
+
+|Garage Owner|
+:Review Emergency Details;
+:Select Available Mechanic;
+
+|Mechanic|
+:Receive Assignment Notification;
+:Open Navigation;
+:Travel to Customer Location;
+:Send Live GPS Updates;
+
+|Customer|
+:Track Mechanic in Real Time;
+
+|Mechanic|
+:Mark Arrival;
+:Perform Repair;
+:Mark Repair Complete;
+
+|System|
+:Update Emergency Status to Completed;
+
+stop
+
+@enduml

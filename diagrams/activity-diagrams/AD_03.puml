@@ -1,0 +1,56 @@
+@startuml
+title UC-04 Book Scheduled Service - Activity Diagram
+
+|Customer|
+start
+:Search Garages;
+:Select Garage;
+:Select Vehicle;
+:Choose Service Type;
+:Select Preferred Date and Time;
+
+|System|
+:Check Garage Capacity and Availability;
+
+while (Capacity Available?) is (No)
+
+  :Suggest Another Slot;
+
+  |Customer|
+  :Select Different Date/Time;
+
+  |System|
+  :Recheck Capacity and Availability;
+
+endwhile (Yes)
+
+:System Estimates Service Cost;
+
+
+|System|
+:Create Booking Request;
+
+|Customer|
+  :Confirm Booking;
+
+|Garage Owner|
+:Receive Booking Request;
+
+|System|
+:Start 2-Hour Response Timer;
+
+if (Garage Accepts Booking?) then (Yes)
+
+  :Confirm Booking;
+  :Notify Customer;
+
+else (No)
+
+  :Reject Booking;
+  :Notify Customer;
+
+endif
+
+stop
+
+@enduml

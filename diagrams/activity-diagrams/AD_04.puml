@@ -1,0 +1,58 @@
+@startuml
+title UC-05 Cancel Booking (Penalty-Based System)
+
+|Customer|
+start
+:Open booking details;
+:Select "Cancel Booking";
+
+|System|
+:Check booking status;
+:Evaluate cancellation policy;
+
+if (Cancellation allowed?) then (Yes)
+
+  :Check booking acceptance status;
+
+  if (Booking already accepted?) then (Yes)
+    :Calculate cancellation penalty fee;
+    :Apply penalty to customer account;
+    :Store penalty record for future bookings;
+
+  else (No)
+    :No penalty applied;
+  endif
+
+  :Update customer profile with cancellation history;
+  :Mark customer as "Penalty Flagged" if applicable;
+
+  |Garage Owner|
+  :Receive cancellation notification;
+
+  |System|
+  :Update booking status to CANCELLED;
+
+  |Customer|
+  :View cancellation confirmation;
+
+  |System|
+  :When customer tries future booking:
+  :Check penalty/foul status;
+
+  if (Penalty exists?) then (Yes)
+    :Show warning message:
+    "Penalty fee will be added to this booking";
+  else (No)
+    :Proceed normally;
+  endif
+
+  stop
+
+else (No)
+
+  :Display "Cancellation Denied";
+  stop
+
+endif
+
+@enduml

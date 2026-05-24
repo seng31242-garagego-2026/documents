@@ -1,0 +1,60 @@
+@startuml
+title UC-15 Accept Emergency SOS - Activity Diagram
+
+|System|
+start
+:Broadcast emergency SOS alert;
+
+|Garage Owner|
+:Receive emergency request;
+:Review customer location and issue;
+
+if (Accept emergency?) then (Yes)
+
+  |System|
+  :Check if already assigned;
+
+  if (Already assigned?) then (Yes)
+    :Display "Assignment Unavailable";
+
+    stop
+  else (No)
+    :Lock assignment;
+
+    |Garage Owner|
+    :Select available mechanic;
+
+    |Mechanic|
+    :Receive assignment notification;
+    :Open navigation;
+
+    :Travel to customer location;
+
+    |System|
+    :Enable live GPS tracking;
+
+    |Mechanic|
+    :Send live GPS updates;
+
+    |Customer|
+    :Track mechanic location;
+
+    |Mechanic|
+    :Mark arrival;
+    :Perform repair;
+    :Mark repair complete;
+
+    |System|
+    :Update emergency status to COMPLETED;
+
+    stop
+  endif
+
+else (No)
+
+  :Ignore request;
+  stop
+
+endif
+
+@enduml
