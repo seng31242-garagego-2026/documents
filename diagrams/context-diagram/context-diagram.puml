@@ -1,0 +1,32 @@
+
+@startuml
+title GarageGo Context Diagram (No Payment System)
+
+actor Customer
+actor GarageOwner as "Garage Owner"
+actor Mechanic
+actor Admin
+
+rectangle "GarageGo System" {
+
+}
+
+database "PostgreSQL Database" as DB
+cloud "Socket.io (Real-time Engine)" as Socket
+cloud "Firebase Cloud Messaging" as FCM
+cloud "Google Maps API" as Maps
+
+Customer --> "GarageGo System" : Register / Login\nSearch garages\nBook service\nRequest SOS\nTrack mechanic
+
+GarageOwner --> "GarageGo System" : Manage garage\nAccept/Reject bookings\nAssign mechanics\nUpdate service status
+
+Mechanic --> "GarageGo System" : View jobs\nSend GPS location\nUpdate status
+
+Admin --> "GarageGo System" : Approve garages\nManage users\nHandle complaints
+
+"GarageGo System" --> DB : Store & retrieve data
+"GarageGo System" --> Socket : Real-time updates (SOS, tracking, booking)
+"GarageGo System" --> FCM : Notifications
+"GarageGo System" --> Maps : Location & routing
+
+@enduml
