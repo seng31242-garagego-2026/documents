@@ -1,0 +1,32 @@
+@startuml
+title SSD - Booking Flow
+
+actor CustomerApp
+participant API
+database DB
+participant GarageApp
+
+CustomerApp -> API : POST /bookings
+
+API -> DB : check availability
+
+alt available slots
+
+    API -> DB : INSERT booking (pending)
+    API -> CustomerApp : bookingId created
+
+    API -> GarageApp : new booking request
+
+    GarageApp -> API : accept booking
+
+    API -> DB : UPDATE booking (accepted)
+
+    API -> CustomerApp : booking confirmed
+
+else no slots
+
+    API -> CustomerApp : no slots available
+
+end
+
+@enduml
