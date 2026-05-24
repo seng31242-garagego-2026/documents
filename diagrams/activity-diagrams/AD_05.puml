@@ -1,0 +1,51 @@
+@startuml
+title UC-21 Admin Approve Garage - Activity Diagram
+
+|Garage Owner|
+start
+:Submit Garage Registration;
+
+|System|
+:Store Registration as Pending;
+
+|Admin|
+:Open Pending Garage Applications;
+:Review Business Information;
+:Verify Documents and Registration Details;
+
+while (Information Complete?) is (No)
+
+  :Request Additional Information;
+
+  |System|
+  :Notify Garage Owner;
+
+  |Garage Owner|
+  :Submit Missing Information;
+
+  |Admin|
+  :Review Updated Information;
+
+endwhile (Yes)
+
+if (Registration Valid?) then (Yes)
+
+  :Approve Garage;
+
+  |System|
+  :Update Garage Status to Approved;
+  :Make Garage Visible to Customers;
+  :Send Approval Notification to Garage Owner;
+
+else (No)
+
+  :Reject Application;
+
+  |System|
+  :Send Rejection Notification to Garage Owner;
+
+endif
+
+stop
+
+@enduml
