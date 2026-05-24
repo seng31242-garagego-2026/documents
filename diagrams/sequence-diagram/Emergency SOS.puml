@@ -1,0 +1,34 @@
+@startuml
+title SSD - Emergency SOS
+
+actor CustomerApp
+participant API
+database DB
+participant SocketIO
+participant GarageApp
+participant MechanicApp
+
+CustomerApp -> API : POST /emergency (lat, lng, vehicleId)
+
+API -> DB : INSERT emergency_request (searching)
+API -> DB : SELECT eligible garages
+
+API -> SocketIO : broadcast emergency alert
+
+SocketIO -> GarageApp : emergency_broadcast
+
+GarageApp -> API : accept emergency request
+
+API -> DB : UPDATE request (assign garage)
+
+API -> CustomerApp : emergency_assigned {mechanic, eta}
+
+loop every 5 seconds
+    MechanicApp -> API : send GPS {lat, lng}
+    API -> CustomerApp : mechanic_location {lat, lng}
+end
+
+MechanicApp -> API : status = arrived
+API -> CustomerApp : mechanic_arrived
+
+@enduml
