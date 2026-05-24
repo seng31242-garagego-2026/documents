@@ -2,7 +2,7 @@
 
 **Document Version:** v0.1  
 **Date:** 2026-05-22  
-**Authors:** P. Kasturi  
+**Authors:** P. Kasturi  , K. Kajaluxmy   
 **Status:** Draft — Sprint 2 Requirements Engineering  
 **Project:** GarageGo – Smart Garage & Emergency Repair Platform  
 **Course:** SENG 31242 System Design Project  
@@ -28,9 +28,22 @@
    2.4 Design and Implementation Constraints  
    2.5 Assumptions and Dependencies  
 
-3. System Analysis *[To be completed ]*  
-4. Functional Requirements *[To be completed ]*  
-5. Non-Functional Requirements *[To be completed ]*  
+3. System Analysis *[To be completed ]*
+   
+4. Functional Requirements   
+   4.1 Overview   
+   4.2 Functional Requirements   
+   
+5. Non-Functional Requirements  
+   5.1 Overview    
+   5.2 Performance   
+   5.3 Security   
+   5.4 Usability   
+   5.5 Reliability   
+   5.6 Scalability  
+   5.7 Maintainability  
+
+     
 6. Alternative Solutions & Feasibility Study *[To be completed ]*  
 
 ---
@@ -220,3 +233,460 @@ The system operates as a multi-sided platform with four primary client applicati
 6. **External API Stability:** Third-party service providers (mapping, notifications, SMS) maintain their current API contracts, pricing, and service levels during the development period.
 
 7. **User Authentication:** All users complete phone OTP verification during registration. Email verification is optional for customers but mandatory for garage owners.
+
+---
+
+# Section 4: Functional Requirements
+
+## 4.1 Overview
+
+This section defines the functional requirements for the GarageGo platform. Each requirement follows the §6.2.2 format with ID, Title, Description, Priority, Source, and Verification method. Priority levels are defined as:
+- **P1** — Must have (core functionality, system cannot operate without it)
+- **P2** — Should have (important but not critical for launch)
+- **P3** — Nice to have (future enhancement)
+
+---
+
+## 4.2 Functional Requirements
+
+### FR-01: Customer Registration
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-01 |
+| **Title** | Customer Registration |
+| **Description** | The system shall allow a new customer to register by providing full name, phone number, email address, NIC number, and password. The system shall verify the phone number via OTP (Twilio) and verify the email address before activating the account. |
+| **Priority** | P1 |
+| **Source** | Interview #9 Finding 1; UC-Registration |
+| **Verification** | Integration test: register a new user with valid credentials, verify OTP is sent via Twilio, confirm email verification link is sent, confirm account is activated after both verifications. |
+
+---
+
+### FR-02: Vehicle Registration
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-02 |
+| **Title** | Vehicle Registration |
+| **Description** | The system shall allow a registered customer to add one or more vehicles to their account. Each vehicle record shall include vehicle type (two-wheel, four-wheel, or heavy), brand, model, year, fuel type, transmission type, registration number, and optional notes. |
+| **Priority** | P1 |
+| **Source** | Interview #9 Finding 1; UC-02 |
+| **Verification** | Functional test: log in as customer, add a vehicle with all required fields, verify vehicle appears in the customer's vehicle list with correct details. |
+
+---
+
+### FR-03: Nearby Garage Search
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-03 |
+| **Title** | Nearby Garage Search |
+| **Description** | The system shall display nearby approved garages on a map and in a list based on the customer's current GPS location. The customer shall be able to filter results by vehicle type, services offered, ratings, operating hours, and current availability. |
+| **Priority** | P1 |
+| **Source** | Survey #13 Q3; UC-02 |
+| **Verification** | Functional test: enable location, open garage search, verify garages within the defined radius are displayed on map and list. Apply each filter and verify results update correctly. |
+
+---
+
+### FR-04: Booking Creation
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-04 |
+| **Title** | Booking Creation |
+| **Description** | The system shall allow a customer to create a booking by selecting a vehicle, choosing a garage, selecting a service type, choosing a date and time, and adding optional notes. The system shall check garage capacity before confirming the booking slot. |
+| **Priority** | P1 |
+| **Source** | UC-02; Interview #9 Finding 2 |
+| **Verification** | Functional test: create a booking with valid inputs, verify booking is stored with status "pending", verify garage receives a push notification. Attempt booking when no slots are available and verify HTTP 409 is returned. |
+
+---
+
+### FR-05: Emergency SOS Dispatch
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-05 |
+| **Title** | Emergency SOS Dispatch |
+| **Description** | The system shall allow a customer to trigger an emergency SOS request by selecting their affected vehicle, describing the issue, and sharing their GPS location. The system shall identify all eligible nearby garages filtered by zone and capacity and broadcast a live alert to all of them simultaneously via Socket.io. |
+| **Priority** | P1 |
+| **Source** | Interview #9 Finding Q8; UC-01 |
+| **Verification** | Integration test: trigger SOS from customer app, verify emergency_request is inserted in DB with status "searching", verify all eligible garages receive the broadcast within 2 seconds. |
+
+---
+
+### FR-06: First-Accept-Wins Emergency Assignment
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-06 |
+| **Title** | First-Accept-Wins Emergency Assignment |
+| **Description** | The system shall assign an emergency request to the first garage that accepts it. The assignment shall use a SELECT FOR UPDATE database lock to prevent race conditions when multiple garages accept simultaneously. All other garages shall be notified that the emergency has already been assigned. |
+| **Priority** | P1 |
+| **Source** | UC-01; UC-03 |
+| **Verification** | Concurrency test: simulate two garages accepting the same emergency simultaneously, verify only one is assigned and the DB lock prevents duplicate assignments. |
+
+---
+
+### FR-07: Mechanic GPS Tracking
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-07 |
+| **Title** | Mechanic GPS Tracking |
+| **Description** | The system shall allow the customer to track the assigned mechanic's real-time GPS location on a map during an active emergency. The mechanic app shall transmit location coordinates every 5 seconds via Socket.io. The system shall display the mechanic's estimated time of arrival and update it continuously. |
+| **Priority** | P1 |
+| **Source** | UC-06; Interview #9 Finding 6 |
+| **Verification** | Integration test: start an emergency, have mechanic app emit location every 5 seconds, verify customer app receives location updates and ETA is displayed correctly. Simulate signal loss for 30 seconds and verify "Tracking paused" is shown. |
+
+---
+
+### FR-08: Garage Capacity Management
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-08 |
+| **Title** | Garage Capacity Management |
+| **Description** | The system shall allow a garage owner to set the maximum number of vehicles they can service simultaneously for each vehicle category (two-wheel, four-wheel, heavy). The system shall enforce this limit when accepting bookings and emergency requests. |
+| **Priority** | P1 |
+| **Source** | UC-02; UC-03 |
+| **Verification** | Functional test: set capacity to 1 for four-wheel vehicles, create a booking that fills the slot, attempt a second booking for the same time slot and verify it is rejected with HTTP 409. |
+
+---
+
+### FR-09: Booking State Machine
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-09 |
+| **Title** | Booking State Machine |
+| **Description** | The system shall manage booking status transitions in the following order: pending → accepted → in_service → completed → paid. The system shall also support the cancelled state reachable from pending or accepted. Each transition shall trigger appropriate notifications to the customer and garage. |
+| **Priority** | P1 |
+| **Source** | UC-02; UC-05 |
+| **Verification** | State machine test: walk a booking through each valid state transition and verify the DB status updates correctly. Attempt invalid transitions and verify they are rejected. |
+
+---
+
+### FR-10: Garage Registration
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-10 |
+| **Title** | Garage Registration |
+| **Description** | The system shall allow a garage owner to register their garage by providing business name, address, registration number, phone number, working hours, accepted vehicle types, services offered, location coordinates, emergency service zone, service capacity, and photos. The registration shall be submitted to an administrator for approval before the garage becomes visible to customers. |
+| **Priority** | P1 |
+| **Source** | Interview #9 Finding 1; UC-04 |
+| **Verification** | Functional test: submit garage registration, verify status is "pending" and not visible to customers. Admin approves the garage, verify status changes to "approved" and garage appears in customer search results. |
+
+---
+
+### FR-11: Admin Garage Approval and Suspension
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-11 |
+| **Title** | Admin Garage Approval and Suspension |
+| **Description** | The system shall provide the administrator with the ability to review pending garage registrations and approve or reject them. The administrator shall also be able to suspend an approved garage if fraudulent activity or policy violations are detected. Suspended garages shall not appear in search results or receive new bookings. |
+| **Priority** | P1 |
+| **Source** | UC-07 |
+| **Verification** | Functional test: admin approves a pending garage and verifies it becomes visible. Admin suspends an approved garage and verifies it disappears from search and cannot accept new bookings. |
+
+---
+
+### FR-12: Service History
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-12 |
+| **Title** | Service History |
+| **Description** | The system shall maintain a complete service history for each registered vehicle. Each service record shall include the garage name, date of service, services performed, invoice details, and payment status. The customer shall be able to view the full history per vehicle from within the app. |
+| **Priority** | P1 |
+| **Source** | Interview #9 Finding Q5; UC-02 |
+| **Verification** | Functional test: complete a service booking, verify the service record is stored against the correct vehicle, open vehicle service history and confirm all fields are displayed correctly. |
+
+---
+
+### FR-13: Rating and Review
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-13 |
+| **Title** | Rating and Review |
+| **Description** | The system shall prompt the customer to submit a rating (1–5 stars) and an optional written review after each completed service. Reviews shall be displayed on the garage profile. A garage's average rating shall be calculated from all submitted reviews and updated in real time. |
+| **Priority** | P2 |
+| **Source** | Survey #13 Q10; UC-02 |
+| **Verification** | Functional test: complete a booking, submit a rating and review, verify the review appears on the garage profile and the average rating is recalculated correctly. |
+
+---
+
+### FR-14: Push Notifications
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-14 |
+| **Title** | Push Notifications |
+| **Description** | The system shall send push notifications to the relevant app via the External Messaging System for the following events: new booking request (garage), booking accepted or rejected (customer), emergency broadcast (garage), emergency assigned (customer), mechanic arrived (customer), and booking status updates. |
+| **Priority** | P1 |
+| **Source** | Interview #9 Finding 1; Survey #13 Q9 |
+| **Verification** | Integration test: trigger each notification event and verify the correct push notification is received by the correct recipient within 5 seconds. |
+
+---
+
+### FR-15: Mechanic Assignment and Dispatch
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-15 |
+| **Title** | Mechanic Assignment and Dispatch |
+| **Description** | The system shall allow the garage owner to assign a mechanic to an accepted emergency request. The assigned mechanic shall receive the job details in the mechanic app including the customer's GPS location and vehicle information. The mechanic shall be able to open navigation in Google Maps or Waze directly from the app. |
+| **Priority** | P1 |
+| **Source** | UC-03; Interview #9 Finding 6 |
+| **Verification** | Functional test: accept an emergency, assign a mechanic, verify the mechanic app displays the job and customer location, verify the navigation link opens correctly. |
+
+---
+
+### FR-16: Complaint Submission
+
+| Field | Detail |
+|-------|--------|
+| **ID** | FR-16 |
+| **Title** | Complaint Submission |
+| **Description** | The system shall allow customers to submit complaints against a garage for issues including overcharging, poor workmanship, no-shows, or unprofessional behaviour. The complaint shall be routed to the administrator dashboard for review and resolution. |
+| **Priority** | P2 |
+| **Source** | Survey #13; UC-07 |
+| **Verification** | Functional test: submit a complaint from the customer app, verify it appears in the admin dashboard with correct details and status "open". |
+
+---
+
+# Section 5: Non-Functional Requirements
+
+## 5.1 Overview
+
+This section defines the non-functional requirements (NFRs) for the GarageGo platform across six categories: Performance, Security, Usability, Reliability, Scalability, and Maintainability. All NFRs are measurable with specific thresholds.
+
+---
+
+## 5.2 Performance
+
+### NFR-P1: API Response Time
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-P1 |
+| **Title** | API Response Time |
+| **Requirement** | The system shall respond to 95% of REST API requests within 2 seconds under a load of 50 concurrent users. |
+| **Threshold** | ≤ 2 seconds for 95th percentile response time at 50 concurrent users |
+| **Verification** | Load test using Apache JMeter with 50 virtual users, measure p95 response time across all major endpoints. |
+
+---
+
+### NFR-P2: Emergency Broadcast Latency
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-P2 |
+| **Title** | Emergency Broadcast Latency |
+| **Requirement** | The system shall deliver an emergency SOS broadcast to all eligible garages within 2 seconds of the customer triggering the SOS. |
+| **Threshold** | ≤ 2 seconds from POST /emergency to Socket.io delivery at all eligible garage clients |
+| **Verification** | Integration test: measure time from SOS trigger to Socket.io event receipt at garage app using timestamped logs. |
+
+---
+
+### NFR-P3: Real-Time Location Update Frequency
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-P3 |
+| **Title** | Real-Time Location Update Frequency |
+| **Requirement** | The system shall relay mechanic GPS location updates to the customer within 1 second of receiving the update from the mechanic app, maintaining a maximum update interval of 6 seconds end-to-end. |
+| **Threshold** | ≤ 1 second relay delay; ≤ 6 seconds total end-to-end interval |
+| **Verification** | Integration test: measure timestamp difference between mechanic emit and customer receive events during active tracking. |
+
+---
+
+## 5.3 Security
+
+### NFR-S1: JWT Authentication
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-S1 |
+| **Title** | JWT Authentication |
+| **Requirement** | All API endpoints except /auth/register and /auth/login shall require a valid JSON Web Token. Tokens shall expire after 15 minutes. Refresh tokens shall expire after 7 days. |
+| **Threshold** | 100% of protected endpoints return HTTP 401 for missing or expired tokens |
+| **Verification** | Security test: call each protected endpoint without a token and with an expired token, verify HTTP 401 is returned in all cases. |
+
+---
+
+### NFR-S2: Password Hashing
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-S2 |
+| **Title** | Password Hashing |
+| **Requirement** | All user passwords shall be hashed using bcrypt with a minimum cost factor of 12 rounds before storage. Plain-text passwords shall never be stored or logged. |
+| **Threshold** | bcrypt cost factor ≥ 12; zero plain-text password occurrences in DB or logs |
+| **Verification** | Code review: verify bcrypt configuration. DB audit: confirm all password values are bcrypt hashes. Log scan: verify no plain-text passwords appear in application logs. |
+
+---
+
+### NFR-S3: Data Encryption in Transit
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-S3 |
+| **Title** | Data Encryption in Transit |
+| **Requirement** | All communication between client apps and the API server shall use HTTPS with TLS 1.2 or higher. WebSocket connections shall use WSS protocol. HTTP requests shall be automatically redirected to HTTPS. |
+| **Threshold** | 100% of traffic over TLS 1.2+; zero unencrypted connections accepted |
+| **Verification** | Security scan using SSL Labs, verify TLS version and certificate validity. Attempt plain HTTP connection and verify redirect to HTTPS. |
+
+---
+
+## 5.4 Usability
+
+### NFR-U1: SOS Button Accessibility
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-U1 |
+| **Title** | SOS Button Accessibility |
+| **Requirement** | The Emergency SOS button shall be visible on the customer app home screen without any scrolling. The button shall have a minimum tap target size of 48x48 dp as per Material Design guidelines. |
+| **Threshold** | SOS button visible without scroll on all supported screen sizes; tap target ≥ 48x48 dp |
+| **Verification** | UI test: open the app on the smallest supported screen size and verify the SOS button is visible without scrolling. Measure tap target dimensions. |
+
+---
+
+### NFR-U2: Registration Completion Time
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-U2 |
+| **Title** | Registration Completion Time |
+| **Requirement** | A new customer shall be able to complete the full registration process including entering details, verifying phone OTP, and verifying email within 3 minutes under normal network conditions. |
+| **Threshold** | ≤ 3 minutes from app open to account activated |
+| **Verification** | Usability test: time 5 new users completing registration on a standard 4G connection, verify average time is under 3 minutes. |
+
+---
+
+### NFR-U3: Offline Error Handling
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-U3 |
+| **Title** | Offline Error Handling |
+| **Requirement** | The system shall display a clear user-friendly error message within 3 seconds when the customer app loses internet connectivity. The message shall not display raw error codes or stack traces. |
+| **Threshold** | Error message displayed ≤ 3 seconds after connectivity loss; zero technical error codes shown to user |
+| **Verification** | Functional test: disable network on device mid-session, verify user-friendly message appears within 3 seconds. |
+
+---
+
+## 5.5 Reliability
+
+### NFR-R1: System Uptime
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-R1 |
+| **Title** | System Uptime |
+| **Requirement** | The GarageGo API server shall maintain a minimum uptime of 99.5% during peak hours (7:00 AM – 9:00 PM Sri Lanka Standard Time), measured monthly. |
+| **Threshold** | ≥ 99.5% uptime during peak hours per month |
+| **Verification** | Monitor uptime using Prometheus and Grafana over a 30-day period, verify monthly uptime report meets threshold. |
+
+---
+
+### NFR-R2: Webhook Failure Recovery
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-R2 |
+| **Title** | Webhook Failure Recovery |
+| **Requirement** | If a webhook from the External Messaging System fails to arrive, the system shall trigger a reconciliation polling job within 10 minutes to verify and update the relevant booking or notification status. |
+| **Threshold** | Reconciliation job triggered ≤ 10 minutes after missed webhook |
+| **Verification** | Integration test: simulate a failed webhook delivery, verify reconciliation job runs within 10 minutes and status is corrected. |
+
+---
+
+### NFR-R3: Data Backup
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-R3 |
+| **Title** | Data Backup |
+| **Requirement** | The PostgreSQL database shall be backed up automatically every 24 hours. Backups shall be retained for a minimum of 30 days. The system shall be recoverable from a backup within 2 hours in the event of data loss. |
+| **Threshold** | Daily backups; 30-day retention; recovery time ≤ 2 hours |
+| **Verification** | Operations test: verify automated backup runs daily, perform a restore from backup and measure recovery time. |
+
+---
+
+## 5.6 Scalability
+
+### NFR-SC1: Concurrent Socket.io Connections
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-SC1 |
+| **Title** | Concurrent Socket.io Connections |
+| **Requirement** | The Socket.io server shall support a minimum of 500 concurrent connections without degradation in message delivery time exceeding 1 second. |
+| **Threshold** | ≥ 500 concurrent connections; message delivery ≤ 1 second at full load |
+| **Verification** | Load test: simulate 500 concurrent Socket.io clients, measure message delivery latency and verify it stays under 1 second. |
+
+---
+
+### NFR-SC2: Database Partitioning
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-SC2 |
+| **Title** | Database Partitioning |
+| **Requirement** | The PostgreSQL bookings table shall support monthly horizontal partitioning to manage data growth. Queries on the current month's data shall return results within 500 milliseconds when the table contains over 100,000 records. |
+| **Threshold** | Monthly partition support; query response ≤ 500ms at 100,000+ records |
+| **Verification** | Performance test: insert 100,000 booking records, run common queries on current month partition and measure response time. |
+
+---
+
+### NFR-SC3: Horizontal API Scaling
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-SC3 |
+| **Title** | Horizontal API Scaling |
+| **Requirement** | The GarageGo API server shall be deployable as multiple instances behind a load balancer. Adding a second instance shall increase throughput by at least 80% compared to a single instance under equivalent load. |
+| **Threshold** | ≥ 80% throughput increase when scaling from 1 to 2 instances |
+| **Verification** | Load test: measure throughput with 1 instance, add a second instance under same load and verify throughput increase meets threshold. |
+
+---
+
+## 5.7 Maintainability
+
+### NFR-M1: Unit Test Coverage
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-M1 |
+| **Title** | Unit Test Coverage |
+| **Requirement** | The GarageGo backend codebase shall maintain a minimum unit test coverage of 70%, measured using Jest. Coverage reports shall be generated automatically as part of the CI/CD pipeline on every pull request. |
+| **Threshold** | ≥ 70% line coverage via Jest; coverage report generated on every PR |
+| **Verification** | Run Jest with coverage flag in CI pipeline, verify coverage report shows ≥ 70% and pipeline fails if threshold is not met. |
+
+---
+
+### NFR-M2: Container Redeployment Time
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-M2 |
+| **Title** | Container Redeployment Time |
+| **Requirement** | Each GarageGo system component (API server, Socket.io server, admin dashboard) shall be independently deployable via Docker. Redeploying any single component shall complete within 5 minutes without affecting other running components. |
+| **Threshold** | Redeployment time ≤ 5 minutes per component; zero downtime for other components |
+| **Verification** | Operations test: redeploy each Docker container independently, measure time from deployment start to healthy state, verify other components remain operational throughout. |
+
+---
+
+### NFR-M3: Code Documentation
+
+| Field | Detail |
+|-------|--------|
+| **ID** | NFR-M3 |
+| **Title** | Code Documentation |
+| **Requirement** | All public API endpoints shall be documented using OpenAPI 3.0 specification. The API documentation shall be auto-generated and accessible at /api/docs when the server is running in development mode. |
+| **Threshold** | 100% of public endpoints documented in OpenAPI 3.0; /api/docs accessible in development |
+| **Verification** | Code review: verify OpenAPI spec covers all endpoints. Start server in dev mode and confirm /api/docs loads with correct endpoint definitions. |
