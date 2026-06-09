@@ -753,7 +753,7 @@ Additionally, many small and medium-scale garages struggle with customer managem
 
 ## 3.6 System Sequence Diagrams
 
-This section presents the system sequence diagrams (SSDs) for the three major use cases of the GarageGo platform. Each SSD illustrates the message flows between actors and internal system components, including synchronous and asynchronous interactions, loop frames, and alternative frames where applicable. All diagrams are cross-referenced to their corresponding use-case descriptions in Section 3.3.
+This section presents the system sequence diagrams (SSDs) for the three major use cases of the GarageGo platform. Each SSD illustrates the message flows between actors and internal system components, including synchronous and asynchronous interactions, loop frames, and alternative frames where applicable. All diagrams are cross-referenced to their corresponding use-case descriptions in Section 3.4.
 
 ---
 
@@ -761,8 +761,8 @@ This section presents the system sequence diagrams (SSDs) for the three major us
 
 This diagram shows the full message flow from the moment a customer triggers an emergency SOS to the point where the mechanic's live GPS location is streamed back to the customer. It covers the API broadcast to eligible garages via Socket.io, the first-accept-wins assignment with a SELECT FOR UPDATE database lock, mechanic dispatch, and the real-time location loop.
 
-- **PNG:** `documents/diagrams/sequence-diagrams/Emergency SOS Sequence diagram.drawio.png`
-- **PlantUML:** `documents/diagrams/sequence-diagrams/Emergency SOS.puml`
+- **PNG:** `documents/diagrams/sequence-diagram/EmergencySOS_Final.drawio.png`
+- **PlantUML:** `documents/diagrams/sequence-diagram/Emergency SOS.puml`
 
 ---
 
@@ -770,8 +770,8 @@ This diagram shows the full message flow from the moment a customer triggers an 
 
 This diagram covers the booking lifecycle from the customer's initial POST request through capacity validation, booking creation, garage notification via FCM push, and the garage owner's accept or reject response. It includes the booking state transitions (pending → accepted → in_service) and the corresponding customer notifications via Socket.io.
 
-- **PNG:** `documents/diagrams/sequence-diagrams/Booking Flow.drawio.png`
-- **PlantUML:** `documents/diagrams/sequence-diagrams/Booking Flow.puml`
+- **PNG:** `documents/diagrams/sequence-diagram/BookingFlow_Final.drawio.png`
+- **PlantUML:** `documents/diagrams/sequence-diagram/Booking Flow.puml`
 
 ---
 
@@ -779,8 +779,8 @@ This diagram covers the booking lifecycle from the customer's initial POST reque
 
 This diagram details the real-time GPS tracking flow during an active emergency. It includes the loop frame for mechanic location updates every 5 seconds via Socket.io and an alternative frame for the signal-loss scenario where tracking is paused after 30 seconds of no updates and resumed upon reconnection.
 
-- **PNG:** `documents/diagrams/sequence-diagrams/Mechanic Tracking GPS.drawio.png`
-- **PlantUML:** `documents/diagrams/sequence-diagrams/Mechanic Tracking.puml`
+- **PNG:** `documents/diagrams/sequence-diagram/MechanicTracking_Final.drawio.png`
+- **PlantUML:** `documents/diagrams/sequence-diagram/Mechanic Tracking.puml`
 
 ---
 

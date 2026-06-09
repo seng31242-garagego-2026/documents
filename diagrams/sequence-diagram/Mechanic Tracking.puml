@@ -1,28 +1,28 @@
 @startuml
 title SSD - Mechanic GPS Tracking
 
-actor CustomerApp
-participant API
-participant SocketIO
-participant MechanicApp
+actor Customer
+actor Mechanic
 
-CustomerApp -> API : join tracking room
+participant "Vehicle Service System" as System
 
-API -> CustomerApp : tracking joined
+Customer -> System : Start Tracking Mechanic
 
-loop every 5 seconds
-    MechanicApp -> SocketIO : send GPS {lat, lng}
-    SocketIO -> API : relay location
-    API -> CustomerApp : update location + ETA
+System --> Customer : Tracking Started
+
+loop Periodic Location Updates
+    Mechanic -> System : Update Current Location
+    System --> Customer : View Mechanic Location and ETA
 end
 
-alt signal lost > 30 sec
-    API -> CustomerApp : tracking paused
-    MechanicApp -> SocketIO : reconnect
-    API -> CustomerApp : tracking resumed
+alt Tracking Interrupted
+    System --> Customer : Tracking Paused
+    Mechanic -> System : Resume Location Sharing
+    System --> Customer : Tracking Resumed
 end
 
-MechanicApp -> API : arrived status
-API -> CustomerApp : mechanic arrived
+Mechanic -> System : Mark Arrival
+
+System --> Customer : Mechanic Arrived
 
 @enduml
