@@ -29,12 +29,15 @@
    2.5 Assumptions and Dependencies  
 
 3. System Analysis and Use-Case Modelling  
-   3.1 Existing System Analysis  
-   3.2 Use-Case Diagram  
-   3.3 Use-Case Descriptions  
-   3.4 Activity Diagrams  
-   3.5 System Sequence Diagrams   
-   3.6 Context Diagrams   
+   3.1 Fact Finding Techniques  
+      &emsp;3.1.1 Structured Interviews  
+      &emsp;3.1.2 Questionnaire Survey  
+   3.2 Existing System Analysis  
+   3.3 Use-Case Diagram   
+   3.4 Use-Case Descriptions   
+   3.5 Activity Diagrams   
+   3.6 System Sequence Diagrams   
+   3.7 Context Diagrams     
    
 4. Functional Requirements   
    4.1 Overview   
@@ -259,9 +262,37 @@ The system operates as a multi-sided platform with four primary client applicati
 
 
 
-# 3. System Analysis and Use-Case Modelling
+# 3. System Analysis and Use-Case Modelling  
 
-## 3.1 Existing System Analysis
+## 3.1 Fact-Finding Techniques
+
+The requirements for GarageGo were gathered using two formal fact-finding techniques: structured interviews and a questionnaire survey. These techniques provided both qualitative and quantitative evidence to support the identification and validation of system requirements.
+
+### 3.1.1 Structured Interviews
+
+Three vehicle owners were interviewed using a predefined interview guide to understand challenges related to finding garages, obtaining repair services, and handling emergency vehicle breakdown situations.
+
+**Evidence:**
+- [Interview Guide](https://github.com/seng31242-garagego-2026/research/blob/main/fact-finding/interviews/interviews-guide.md)
+- [Participant 1 Summary](https://github.com/seng31242-garagego-2026/research/blob/main/fact-finding/interviews/participant-1-summary.md)
+- [Participant 2 Summary](https://github.com/seng31242-garagego-2026/research/blob/main/fact-finding/interviews/participant-2-summary.md)
+- [Participant 3 Summary](https://github.com/seng31242-garagego-2026/research/blob/main/fact-finding/interviews/participant-3-summary.md)
+- [Interview Findings Summary](https://github.com/seng31242-garagego-2026/research/blob/main/fact-finding/interviews/findings-summary.md)
+
+### 3.1.2 Questionnaire Survey
+
+A questionnaire survey was distributed among Sri Lankan vehicle owners to collect quantitative data regarding vehicle servicing habits, garage-finding challenges, emergency breakdown experiences, and desired application features.
+
+**Evidence:**
+- [Survey Design](https://github.com/seng31242-garagego-2026/research/blob/main/fact-finding/questionnare/survey-design.md)
+- [Questionnaire Results Summary](https://github.com/seng31242-garagego-2026/research/blob/main/fact-finding/questionnare/results-summary.pdf)
+- [Questionnaire Key Findings](https://github.com/seng31242-garagego-2026/research/blob/main/fact-finding/questionnare/key-findings.md)
+
+### Summary
+
+The combination of structured interviews and questionnaire surveys provided both qualitative and quantitative insights into user needs, pain points, and expectations. The findings obtained through these fact-finding activities were used to define the system scope, develop use cases, and formulate the functional and non-functional requirements of GarageGo.
+
+## 3.2 Existing System Analysis
 
 Currently, vehicle owners in Sri Lanka mainly rely on manual methods to locate garages, mechanics, and roadside assistance services. Customers usually contact garages through phone calls, Facebook pages, WhatsApp messages, or personal recommendations. During emergencies such as vehicle breakdowns, users often struggle to quickly locate nearby mechanics who are available at that moment. Most garages also do not maintain a centralized booking or tracking system, causing delays, communication failures, and customer dissatisfaction.
 
@@ -275,7 +306,7 @@ Additionally, many small and medium-scale garages struggle with customer managem
 
 ---
 
-## 3.2 Use-Case Diagram
+## 3.3 Use-Case Diagram
 
 ### System Boundary
 **GarageGo Platform**
@@ -336,7 +367,7 @@ Additionally, many small and medium-scale garages struggle with customer managem
 
 ---
 
-## 3.3 Use-Case Descriptions
+## 3.4 Use-Case Descriptions
 
 ---
 
@@ -645,7 +676,7 @@ Additionally, many small and medium-scale garages struggle with customer managem
 ---
 
 
-## 3.4 Activity Diagrams
+## 3.5 Activity Diagrams
 
 ### AD1 – UC-06 Emergency SOS Dispatch
 
@@ -720,7 +751,7 @@ Additionally, many small and medium-scale garages struggle with customer managem
 ---
 
 
-## 3.5 System Sequence Diagrams
+## 3.6 System Sequence Diagrams
 
 This section presents the system sequence diagrams (SSDs) for the three major use cases of the GarageGo platform. Each SSD illustrates the message flows between actors and internal system components, including synchronous and asynchronous interactions, loop frames, and alternative frames where applicable. All diagrams are cross-referenced to their corresponding use-case descriptions in Section 3.3.
 
@@ -753,7 +784,7 @@ This diagram details the real-time GPS tracking flow during an active emergency.
 
 ---
 
-## 3.6 System Context Diagram
+## 3.7 System Context Diagram
 
 The context diagram defines the GarageGo system boundary and shows all external actors (Customer, Garage Owner/Mechanic, System Admin) and external services (Email Service, Twilio, Google Maps Platform, External Messaging System) and their interactions with the internal components (API Server, Admin Dashboard, Customer App, Garage/Mechanic App).
 
