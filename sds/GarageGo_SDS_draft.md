@@ -582,6 +582,7 @@ The GarageGo class model follows an object-oriented design where:
 - Administrators oversee platform governance and approval processes.
 
 The class diagram serves as the foundation for implementing the business logic layer and maintaining consistency between the system design and database model.
+<<<<<<< draft
 
 
 # Chapter 4: Sequence Diagrams
@@ -1218,4 +1219,7 @@ This chapter documents how each of the fourteen non-functional requirements defi
 
 
 
+
+=======
+>>>>>>> main
 
