@@ -1,0 +1,67 @@
+@startuml SM_GarageApproval
+'=============================================================
+' GarageGo -- Garage Approval State Machine
+' FR-10, FR-11 | BR-19, BR-20
+'=============================================================
+skinparam defaultFontName  Arial
+skinparam defaultFontSize  13
+skinparam dpi              150
+skinparam backgroundColor  #FFFFFF
+skinparam shadowing        false
+skinparam roundcorner      10
+skinparam ArrowThickness   1.5
+skinparam Padding          8
+
+skinparam state {
+  BackgroundColor #EBF3FB
+  BorderColor     #2E6DA4
+  FontColor       #1A1A1A
+  FontSize        12
+  ArrowColor      #2E6DA4
+  StartColor      #1F3864
+  EndColor        #1F3864
+}
+skinparam note {
+  BackgroundColor #FFF9E6
+  BorderColor     #BF8F00
+  FontColor       #4D3800
+  FontSize        11
+}
+
+title GarageGo -- Garage Approval State Machine\n(FR-10 FR-11 | BR-19 BR-20)
+
+[*] --> PENDING : Garage owner submits registration\nDocuments uploaded  Admin notified
+
+state PENDING {
+  PENDING : do / NOT visible to customers  (BR-19)
+  PENDING : do / Admin reviews on dashboard
+}
+
+state APPROVED {
+  APPROVED : do / Visible in customer search  (FR-03)
+  APPROVED : do / Can receive bookings  (FR-04)
+  APPROVED : do / Can receive SOS alerts  (FR-05)
+}
+
+state SUSPENDED {
+  SUSPENDED : do / NOT visible to customers
+  SUSPENDED : do / Cannot accept bookings or emergencies
+}
+
+PENDING   --> APPROVED   : Admin approves\nPUT /admin/garages/{id}/approve\n/ Email sent to owner
+PENDING   --> PENDING    : Admin requests more info\n/ Owner resubmits documents
+APPROVED  --> SUSPENDED  : Admin detects fraud or\npolicy violation
+SUSPENDED --> APPROVED   : Admin reinstates\nafter issue resolution
+SUSPENDED --> [*]        : Permanent ban
+
+note right of PENDING
+  BR-20 : registrationNo must be
+  UNIQUE -- enforced at INSERT
+end note
+
+note right of APPROVED
+  BR-19 : Only APPROVED garages
+  visible to customers  (FR-03)
+end note
+
+@enduml

@@ -1,0 +1,143 @@
+@startuml component_diagram
+'=============================================================
+' GarageGo – Component / Package Diagram
+' SDS §3 | SRS v0.1
+'=============================================================
+skinparam defaultFontName  Arial
+skinparam defaultFontSize  12
+skinparam dpi              150
+skinparam backgroundColor  #FFFFFF
+skinparam shadowing        false
+skinparam roundcorner      8
+skinparam ArrowThickness   1.5
+skinparam Padding          6
+skinparam nodesep          50
+skinparam ranksep          55
+skinparam linetype         polyline
+
+skinparam package {
+  BackgroundColor #EBF3FB
+  BorderColor     #2E6DA4
+  FontColor       #1F3864
+  FontStyle       bold
+  FontSize        13
+}
+skinparam component {
+  BackgroundColor #D9E8FB
+  BorderColor     #2E6DA4
+  FontColor       #1A1A1A
+  FontSize        12
+}
+skinparam database {
+  BackgroundColor #FFF2CC
+  BorderColor     #BF8F00
+  FontColor       #1A1A1A
+  FontSize        12
+}
+skinparam cloud {
+  BackgroundColor #E2EFDA
+  BorderColor     #4E8B3F
+  FontColor       #1A1A1A
+  FontSize        12
+}
+skinparam rectangle {
+  BackgroundColor #F4ECFA
+  BorderColor     #7B3FA3
+  FontColor       #1A1A1A
+  FontSize        12
+}
+
+title GarageGo -- Component / Package Diagram
+
+package "Presentation Layer  (React Native / React.js)" as PRES {
+  component "[Customer App]"     as CA
+  component "[Garage Owner App]" as GOA
+  component "[Mechanic App]"     as MA
+  component "[Admin Dashboard]"  as AD
+}
+
+rectangle "Nginx  (TLS 1.2+  |  HTTP -> HTTPS)" as NGINX
+
+package "API Layer  (Node.js 20 / Express)" as API {
+  component "[REST API Server]\n/api/v1/*  JWT  RBAC\nJoi Validation" as REST
+  component "[Socket.io Server]\nWSS  Rooms  Events" as SOCK
+}
+
+package "Business Logic Layer" as BL {
+  component "[AuthService]\nOTP  JWT  BCrypt"        as AUTH
+  component "[BookingService]\nState Machine  Capacity" as BOOK
+  component "[EmergencyService]\nSOS  First-Accept Lock"  as EMER
+  component "[GarageService]\nRegistration  Geocode"   as GAR
+  component "[MechanicService]\nDispatch  GPS Update"  as MECHS
+  component "[ReviewService]\nRating  Validation"      as REV
+  component "[NotificationService]\nFCM  SMS"           as NOTIF
+  component "[AdminService]\nApproval  Suspension"     as ADMS
+}
+
+package "Data Access Layer  (node-postgres / Sequelize)" as DAL {
+  component "[Repository]\nParameterised Queries\nPool max 20" as REPO
+}
+
+package "Persistence Layer" as PERS {
+  database "PostgreSQL 15\nPartitioned bookings\n(NFR-SC2)" as PG
+  database "Redis 7\nSessions  OTP TTL\nPub/Sub  Cache" as RD
+}
+
+cloud "External Services" as EXT {
+  component "[Google Maps Platform]" as GMAP
+  component "[Twilio SMS]"           as TWIL
+  component "[Firebase FCM]"         as FCM
+  component "[Cloudinary / S3]"      as STOR
+}
+
+CA  -down-> NGINX : HTTPS / WSS
+GOA -down-> NGINX : HTTPS / WSS
+MA  -down-> NGINX : HTTPS / WSS
+AD  -down-> NGINX : HTTPS
+
+NGINX -down-> REST
+NGINX -down-> SOCK
+
+REST -down-> AUTH
+REST -down-> BOOK
+REST -down-> EMER
+REST -down-> GAR
+REST -down-> MECHS
+REST -down-> REV
+REST -down-> ADMS
+REST -right-> NOTIF
+
+SOCK -right-> EMER : SOS broadcast\nGPS relay
+SOCK -down->  RD   : socket.io-redis\nPub/Sub
+
+AUTH  -down-> REPO
+BOOK  -down-> REPO
+EMER  -down-> REPO
+GAR   -down-> REPO
+MECHS -down-> REPO
+REV   -down-> REPO
+ADMS  -down-> REPO
+AUTH  -right-> RD : OTP TTL
+
+REPO -down-> PG
+REPO -down-> RD
+
+NOTIF -right-> FCM
+NOTIF -right-> TWIL
+GAR   -right-> GMAP : Geocode
+EMER  -right-> GMAP : Nearby  ETA
+GAR   -right-> STOR : File upload
+
+note bottom of SOCK
+  Redis Pub/Sub fan-out enables Socket.io
+  across N scaled instances
+  (NFR-SC1 : >= 500 concurrent WSS)
+end note
+
+note bottom of PG
+  PARTITION BY RANGE(scheduledAt)
+  Monthly partitions via pg-cron
+  (NFR-SC2 : query <= 500 ms at 100k+)
+end note
+
+@enduml
