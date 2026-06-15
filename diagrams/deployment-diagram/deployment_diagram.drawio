@@ -1,0 +1,96 @@
+@startuml deployment_diagram_simple
+skinparam defaultFontName  Arial
+skinparam defaultFontSize  12
+skinparam dpi              150
+skinparam backgroundColor  #FFFFFF
+skinparam shadowing        false
+skinparam roundcorner      8
+skinparam ArrowThickness   1.5
+skinparam Padding          8
+skinparam nodesep          40
+skinparam ranksep          50
+
+skinparam node {
+  BackgroundColor #D9E8FB
+  BorderColor     #2E6DA4
+  FontColor       #1F3864
+  FontStyle       bold
+  FontSize        12
+}
+skinparam artifact {
+  BackgroundColor #EBF3FB
+  BorderColor     #2E6DA4
+  FontColor       #1A1A1A
+  FontSize        11
+}
+skinparam database {
+  BackgroundColor #FFF2CC
+  BorderColor     #BF8F00
+  FontColor       #1A1A1A
+  FontSize        12
+}
+skinparam cloud {
+  BackgroundColor #E2EFDA
+  BorderColor     #4E8B3F
+  FontColor       #1A1A1A
+  FontSize        12
+}
+
+title GarageGo -- Deployment Diagram
+
+'── Client Devices ────────────────────────────────────────────
+node "Mobile Devices\n(iOS 15+ / Android 10+)" as MOBILE {
+  artifact "Customer App\nGarage Owner App\nMechanic App\n(React Native / Expo)" as APPS
+}
+
+node "Admin Browser\n(Chrome 110+)" as BROWSER {
+  artifact "Admin Dashboard\n(React.js)" as SPA
+}
+
+'── Gateway ───────────────────────────────────────────────────
+node "Load Balancer" as LB {
+  artifact "Nginx\nTLS 1.2+  |  HTTPS  |  Round-robin" as NGINX
+}
+
+'── Application ───────────────────────────────────────────────
+node "Application Server\n(Docker  |  Auto-scale 1-4)" as APP {
+  artifact "Node.js 20 LTS\nExpress REST API + Socket.io" as SERVER
+}
+
+'── Data ──────────────────────────────────────────────────────
+node "PostgreSQL 15\n(Private Subnet)" as PG {
+  database "Partitioned bookings table\nAuto backups 30-day (NFR-R3)" as PGDB
+}
+
+node "Redis 7\n(Private Subnet)" as RD {
+  database "Sessions  OTP  Cache\nSocket.io Pub/Sub (NFR-SC1)" as RDDB
+}
+
+'── Storage & External ────────────────────────────────────────
+node "Object Storage\n(Cloudinary / S3)" as STORE {
+  artifact "Photos  PDFs  Documents" as FILES
+}
+
+cloud "External Services" as EXT {
+  artifact "Google Maps  |  Twilio SMS  |  Firebase FCM" as SVCS
+}
+
+'── CI/CD ─────────────────────────────────────────────────────
+node "GitHub Actions  (CI/CD)" as CICD {
+  artifact "Test  Lint  Build  Deploy" as PIPE
+}
+
+'── Connections ───────────────────────────────────────────────
+MOBILE  -down-> LB   : HTTPS / WSS
+BROWSER -down-> LB   : HTTPS
+
+LB  -down-> APP  : Route traffic
+
+APP -down-> PG   : TCP 5432
+APP -down-> RD   : TCP 6379
+APP -right-> STORE : Upload
+APP -right-> EXT   : API calls
+
+CICD -down-> APP : Rolling deploy\n(NFR-M2 <= 5 min)
+
+@enduml

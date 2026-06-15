@@ -1,0 +1,180 @@
+@startuml SM_Booking
+'=============================================================
+' GarageGo -- Booking State Machine
+' FR-09 | BR-08 to BR-11
+'=============================================================
+skinparam defaultFontName  Arial
+skinparam defaultFontSize  13
+skinparam dpi              150
+skinparam backgroundColor  #FFFFFF
+skinparam shadowing        false
+skinparam roundcorner      10
+skinparam ArrowThickness   1.5
+skinparam Padding          8
+
+skinparam state {
+  BackgroundColor #EBF3FB
+  BorderColor     #2E6DA4
+  FontColor       #1A1A1A
+  FontSize        12
+  ArrowColor      #2E6DA4
+  StartColor      #1F3864
+  EndColor        #1F3864
+}
+skinparam note {
+  BackgroundColor #FFF9E6
+  BorderColor     #BF8F00
+  FontColor       #4D3800
+  FontSize        11
+}
+
+title GarageGo -- Booking State Machine\n(FR-09 | BR-08 to BR-11)
+
+[*] --> PENDING : Customer confirms booking\nPOST /bookings
+
+state PENDING {
+  PENDING : entry / Start 2-h garage response timer  (BR-08)
+  PENDING : do   / Notify garage owner via FCM  (FR-14)
+}
+
+state ACCEPTED {
+  ACCEPTED : entry / Notify customer -- confirmation + cost
+  ACCEPTED : do   / Garage prepares service bay
+}
+
+state IN_SERVICE {
+  IN_SERVICE : entry / Notify customer "Work started"
+  IN_SERVICE : do   / No cancellation permitted
+}
+
+state COMPLETED {
+  COMPLETED : entry / Invoice generated  (FR-12)
+  COMPLETED : do   / Customer prompted to pay cash
+}
+
+state PAID {
+  PAID : entry / Service record saved to history  (FR-12)
+  PAID : do   / Customer prompted to rate  (FR-13)
+}
+
+state CANCELLED {
+  CANCELLED : entry / Apply fee if applicable  (BR-10)
+  CANCELLED : do   / Fee added to next invoice  (BR-11)
+}
+
+PENDING   --> ACCEPTED   : Garage accepts\nwithin 2-h window
+PENDING   --> CANCELLED  : Garage rejects\nOR timer expires
+PENDING   --> CANCELLED  : Customer cancels\nbefore acceptance\n[fee = 0]
+
+ACCEPTED  --> IN_SERVICE : Garage starts repair
+ACCEPTED  --> CANCELLED  : Customer cancels\nafter acceptance\n[fee applies -- BR-10]
+
+IN_SERVICE --> COMPLETED : Garage marks complete
+
+COMPLETED  --> PAID      : Garage confirms\ncash received within 24 h
+
+PAID       --> [*]
+CANCELLED  --> [*]
+
+note right of IN_SERVICE
+  UC-05 Alt Flow 2 :
+  Cancellation NOT allowed
+  once IN_SERVICE
+end note
+
+note bottom of PAID
+  BR-16 : Only COMPLETED / PAID
+  records appear in service history
+end note
+
+@enduml
+@startuml SM_Booking
+'=============================================================
+' GarageGo -- Booking State Machine
+' FR-09 | BR-08 to BR-11
+'=============================================================
+skinparam defaultFontName  Arial
+skinparam defaultFontSize  13
+skinparam dpi              150
+skinparam backgroundColor  #FFFFFF
+skinparam shadowing        false
+skinparam roundcorner      10
+skinparam ArrowThickness   1.5
+skinparam Padding          8
+
+skinparam state {
+  BackgroundColor #EBF3FB
+  BorderColor     #2E6DA4
+  FontColor       #1A1A1A
+  FontSize        12
+  ArrowColor      #2E6DA4
+  StartColor      #1F3864
+  EndColor        #1F3864
+}
+skinparam note {
+  BackgroundColor #FFF9E6
+  BorderColor     #BF8F00
+  FontColor       #4D3800
+  FontSize        11
+}
+
+title GarageGo -- Booking State Machine\n(FR-09 | BR-08 to BR-11)
+
+[*] --> PENDING : Customer confirms booking\nPOST /bookings
+
+state PENDING {
+  PENDING : entry / Start 2-h garage response timer  (BR-08)
+  PENDING : do   / Notify garage owner via FCM  (FR-14)
+}
+
+state ACCEPTED {
+  ACCEPTED : entry / Notify customer -- confirmation + cost
+  ACCEPTED : do   / Garage prepares service bay
+}
+
+state IN_SERVICE {
+  IN_SERVICE : entry / Notify customer "Work started"
+  IN_SERVICE : do   / No cancellation permitted
+}
+
+state COMPLETED {
+  COMPLETED : entry / Invoice generated  (FR-12)
+  COMPLETED : do   / Customer prompted to pay cash
+}
+
+state PAID {
+  PAID : entry / Service record saved to history  (FR-12)
+  PAID : do   / Customer prompted to rate  (FR-13)
+}
+
+state CANCELLED {
+  CANCELLED : entry / Apply fee if applicable  (BR-10)
+  CANCELLED : do   / Fee added to next invoice  (BR-11)
+}
+
+PENDING   --> ACCEPTED   : Garage accepts\nwithin 2-h window
+PENDING   --> CANCELLED  : Garage rejects\nOR timer expires
+PENDING   --> CANCELLED  : Customer cancels\nbefore acceptance\n[fee = 0]
+
+ACCEPTED  --> IN_SERVICE : Garage starts repair
+ACCEPTED  --> CANCELLED  : Customer cancels\nafter acceptance\n[fee applies -- BR-10]
+
+IN_SERVICE --> COMPLETED : Garage marks complete
+
+COMPLETED  --> PAID      : Garage confirms\ncash received within 24 h
+
+PAID       --> [*]
+CANCELLED  --> [*]
+
+note right of IN_SERVICE
+  UC-05 Alt Flow 2 :
+  Cancellation NOT allowed
+  once IN_SERVICE
+end note
+
+note bottom of PAID
+  BR-16 : Only COMPLETED / PAID
+  records appear in service history
+end note
+
+@enduml

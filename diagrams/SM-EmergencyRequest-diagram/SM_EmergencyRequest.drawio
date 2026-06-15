@@ -1,0 +1,192 @@
+@startuml SM_EmergencyRequest
+'=============================================================
+' GarageGo -- EmergencyRequest State Machine
+' FR-05, FR-06, FR-07, FR-15 | BR-12, BR-13 | NFR-P2, NFR-P3
+'=============================================================
+skinparam defaultFontName  Arial
+skinparam defaultFontSize  13
+skinparam dpi              150
+skinparam backgroundColor  #FFFFFF
+skinparam shadowing        false
+skinparam roundcorner      10
+skinparam ArrowThickness   1.5
+skinparam Padding          8
+
+skinparam state {
+  BackgroundColor #EBF3FB
+  BorderColor     #2E6DA4
+  FontColor       #1A1A1A
+  FontSize        12
+  ArrowColor      #2E6DA4
+  StartColor      #1F3864
+  EndColor        #1F3864
+}
+skinparam note {
+  BackgroundColor #FFF9E6
+  BorderColor     #BF8F00
+  FontColor       #4D3800
+  FontSize        11
+}
+
+title GarageGo -- EmergencyRequest State Machine\n(FR-05 FR-06 FR-07 FR-15 | BR-12 BR-13)
+
+[*] --> SEARCHING : Customer presses SOS button\nGPS captured  POST /emergency
+
+state SEARCHING {
+  SEARCHING : entry / INSERT emergency_request  (radius = 10 km)
+  SEARCHING : do   / Socket.io broadcast to garage rooms
+  SEARCHING : do   / 60-s acceptance window running  (BR-13)
+}
+
+state ASSIGNED {
+  ASSIGNED : entry / SELECT FOR UPDATE lock acquired  (FR-06)
+  ASSIGNED : entry / Notify customer -- "Help found!"
+  ASSIGNED : do   / Garage owner selects mechanic
+}
+
+state DISPATCHED {
+  DISPATCHED : entry / Mechanic receives job via Socket.io  (FR-15)
+  DISPATCHED : do   / GPS location emitted every 5 s  (NFR-P3)
+  DISPATCHED : do   / Customer sees mechanic on map + ETA
+}
+
+state IN_PROGRESS {
+  IN_PROGRESS : entry / Notify customer -- "Mechanic arrived!"
+  IN_PROGRESS : do   / Repair in progress
+  IN_PROGRESS : do   / GPS tracking continues
+}
+
+state COMPLETED {
+  COMPLETED : entry / completedAt = NOW()
+  COMPLETED : entry / GPS tracking stopped
+  COMPLETED : do   / Customer prompted for review
+}
+
+SEARCHING  --> SEARCHING  : 60 s elapsed -- no acceptance\n/ searchRadiusKm += 10  re-broadcast
+SEARCHING  --> ASSIGNED   : First garage accepts\n[SELECT FOR UPDATE  FR-06]
+SEARCHING  --> CANCELLED  : Customer cancels before assignment
+
+ASSIGNED   --> DISPATCHED : Garage dispatches mechanic\nPOST /emergency/{id}/dispatch
+
+DISPATCHED --> IN_PROGRESS : Mechanic marks arrived\nPUT /emergency/{id}/arrived
+
+IN_PROGRESS --> COMPLETED  : Mechanic marks complete\nPUT /emergency/{id}/complete
+
+COMPLETED  --> [*]
+CANCELLED  --> [*]
+
+note right of SEARCHING
+  BR-12 : Only APPROVED garages with
+    hasEmergencyService = true receive alert
+  NFR-P2 : broadcast <= 2 s of POST
+end note
+
+note right of ASSIGNED
+  BR-13 : All other garages receive
+    "emergency_taken" event
+end note
+
+note right of DISPATCHED
+  NFR-P3 :
+    emit every 5 s
+    relay <= 1 s
+    end-to-end <= 6 s
+end note
+
+@enduml
+@startuml SM_EmergencyRequest
+'=============================================================
+' GarageGo -- EmergencyRequest State Machine
+' FR-05, FR-06, FR-07, FR-15 | BR-12, BR-13 | NFR-P2, NFR-P3
+'=============================================================
+skinparam defaultFontName  Arial
+skinparam defaultFontSize  13
+skinparam dpi              150
+skinparam backgroundColor  #FFFFFF
+skinparam shadowing        false
+skinparam roundcorner      10
+skinparam ArrowThickness   1.5
+skinparam Padding          8
+
+skinparam state {
+  BackgroundColor #EBF3FB
+  BorderColor     #2E6DA4
+  FontColor       #1A1A1A
+  FontSize        12
+  ArrowColor      #2E6DA4
+  StartColor      #1F3864
+  EndColor        #1F3864
+}
+skinparam note {
+  BackgroundColor #FFF9E6
+  BorderColor     #BF8F00
+  FontColor       #4D3800
+  FontSize        11
+}
+
+title GarageGo -- EmergencyRequest State Machine\n(FR-05 FR-06 FR-07 FR-15 | BR-12 BR-13)
+
+[*] --> SEARCHING : Customer presses SOS button\nGPS captured  POST /emergency
+
+state SEARCHING {
+  SEARCHING : entry / INSERT emergency_request  (radius = 10 km)
+  SEARCHING : do   / Socket.io broadcast to garage rooms
+  SEARCHING : do   / 60-s acceptance window running  (BR-13)
+}
+
+state ASSIGNED {
+  ASSIGNED : entry / SELECT FOR UPDATE lock acquired  (FR-06)
+  ASSIGNED : entry / Notify customer -- "Help found!"
+  ASSIGNED : do   / Garage owner selects mechanic
+}
+
+state DISPATCHED {
+  DISPATCHED : entry / Mechanic receives job via Socket.io  (FR-15)
+  DISPATCHED : do   / GPS location emitted every 5 s  (NFR-P3)
+  DISPATCHED : do   / Customer sees mechanic on map + ETA
+}
+
+state IN_PROGRESS {
+  IN_PROGRESS : entry / Notify customer -- "Mechanic arrived!"
+  IN_PROGRESS : do   / Repair in progress
+  IN_PROGRESS : do   / GPS tracking continues
+}
+
+state COMPLETED {
+  COMPLETED : entry / completedAt = NOW()
+  COMPLETED : entry / GPS tracking stopped
+  COMPLETED : do   / Customer prompted for review
+}
+
+SEARCHING  --> SEARCHING  : 60 s elapsed -- no acceptance\n/ searchRadiusKm += 10  re-broadcast
+SEARCHING  --> ASSIGNED   : First garage accepts\n[SELECT FOR UPDATE  FR-06]
+SEARCHING  --> CANCELLED  : Customer cancels before assignment
+
+ASSIGNED   --> DISPATCHED : Garage dispatches mechanic\nPOST /emergency/{id}/dispatch
+
+DISPATCHED --> IN_PROGRESS : Mechanic marks arrived\nPUT /emergency/{id}/arrived
+
+IN_PROGRESS --> COMPLETED  : Mechanic marks complete\nPUT /emergency/{id}/complete
+
+COMPLETED  --> [*]
+CANCELLED  --> [*]
+
+note right of SEARCHING
+  BR-12 : Only APPROVED garages with
+    hasEmergencyService = true receive alert
+  NFR-P2 : broadcast <= 2 s of POST
+end note
+
+note right of ASSIGNED
+  BR-13 : All other garages receive
+    "emergency_taken" event
+end note
+
+note right of DISPATCHED
+  NFR-P3 :
+    emit every 5 s
+    relay <= 1 s
+    end-to-end <= 6 s
+end note
+
+@enduml

@@ -1,0 +1,299 @@
+@startuml class_diagram
+'=============================================================
+' GarageGo – UML Class Diagram
+' SDS §4 | FR-01 to FR-16 | UC-01 to UC-10
+'=============================================================
+skinparam defaultFontName        Arial
+skinparam defaultFontSize        12
+skinparam dpi                    150
+skinparam backgroundColor        #FFFFFF
+skinparam shadowing              false
+skinparam classAttributeIconSize 0
+skinparam roundcorner            6
+skinparam Padding                6
+skinparam nodesep                55
+skinparam ranksep                60
+skinparam linetype               ortho
+skinparam ArrowThickness         1.5
+
+skinparam class {
+  BackgroundColor       #EBF3FB
+  BorderColor           #2E6DA4
+  HeaderBackgroundColor #1F3864
+  HeaderFontColor       #FFFFFF
+  FontColor             #1A1A1A
+  FontSize              12
+}
+skinparam arrow {
+  Color     #2E6DA4
+  FontColor #333333
+  FontSize  11
+}
+
+title GarageGo -- UML Class Diagram
+
+'=== ENUMERATIONS =============================================
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  IN_SERVICE
+  COMPLETED
+  PAID
+  CANCELLED
+}
+
+enum EmergencyStatus {
+  SEARCHING
+  ASSIGNED
+  DISPATCHED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum GarageStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
+enum VehicleType {
+  TWO_WHEEL
+  FOUR_WHEEL
+  HEAVY
+}
+
+enum UserRole {
+  CUSTOMER
+  GARAGE_OWNER
+  MECHANIC
+  ADMIN
+}
+
+enum NotificationType {
+  BOOKING_REQUEST
+  BOOKING_ACCEPTED
+  BOOKING_REJECTED
+  EMERGENCY_BROADCAST
+  EMERGENCY_ASSIGNED
+  MECHANIC_ARRIVED
+  STATUS_UPDATE
+}
+
+'=== DOMAIN CLASSES ==========================================
+class Customer {
+  - customerId  : UUID
+  - fullName    : String
+  - phone       : String
+  - email       : String
+  - passwordHash : String
+  - nicNumber   : String <<AES-256>>
+  - isActive    : Boolean
+  - role        : UserRole
+  - createdAt   : Timestamp
+  ..
+  + register(dto) : Customer
+  + login(phone, pwd) : AuthToken
+  + verifyOTP(otp) : Boolean
+  + addVehicle(dto) : Vehicle
+  + bookService(dto) : Booking
+  + cancelBooking(id) : Boolean
+  + triggerSOS(dto) : EmergencyRequest
+  + rateGarage(dto) : Review
+  + viewHistory(vehicleId) : List<Booking>
+}
+
+class Vehicle {
+  - vehicleId       : UUID
+  - customerId      : UUID
+  - vehicleType     : VehicleType
+  - brand           : String
+  - model           : String
+  - year            : Integer
+  - registrationNo  : String <<UNIQUE>>
+  - fuelType        : String
+  - transmissionType : String
+  - notes           : String
+  ..
+  + addVehicle(dto) : Vehicle
+  + getServiceHistory() : List<Booking>
+}
+
+class Garage {
+  - garageId           : UUID
+  - businessName       : String
+  - registrationNo     : String <<UNIQUE>>
+  - address            : String
+  - latitude           : Decimal
+  - longitude          : Decimal
+  - status             : GarageStatus
+  - averageRating      : Decimal
+  - capacity2W         : Integer
+  - capacity4W         : Integer
+  - capacityHeavy      : Integer
+  - hasEmergencyService : Boolean
+  - emergencyZoneRadius : Integer
+  ..
+  + register(dto) : Garage
+  + checkCapacity(type, time) : Boolean
+  + acceptBooking(id) : Booking
+  + rejectBooking(id, reason) : Booking
+  + startService(id) : Booking
+  + completeService(id, cost) : Booking
+  + acceptEmergency(id) : EmergencyRequest
+}
+
+class GarageOwner {
+  - ownerId     : UUID
+  - garageId    : UUID
+  - email       : String
+  - phone       : String
+  - passwordHash : String
+  - isVerified  : Boolean
+  - role        : UserRole
+  ..
+  + login(phone, pwd) : AuthToken
+  + registerGarage(dto) : Garage
+  + assignMechanic(emergId, mId) : void
+  + generateInvoice(bookingId) : Invoice
+  + viewAnalytics() : AnalyticsDTO
+}
+
+class Mechanic {
+  - mechanicId       : UUID
+  - garageId         : UUID
+  - fullName         : String
+  - phone            : String
+  - passwordHash     : String
+  - isAvailable      : Boolean
+  - currentLatitude  : Decimal
+  - currentLongitude : Decimal
+  - lastLocationAt   : Timestamp
+  - role             : UserRole
+  ..
+  + login(phone, pwd) : AuthToken
+  + updateLocation(lat, lng) : void
+  + markArrived(emergencyId) : void
+  + markComplete(emergencyId) : void
+}
+
+class Booking {
+  - bookingId       : UUID
+  - customerId      : UUID
+  - vehicleId       : UUID
+  - garageId        : UUID
+  - serviceType     : String
+  - scheduledAt     : Timestamp
+  - status          : BookingStatus
+  - estimatedCost   : Decimal
+  - finalCost       : Decimal
+  - cancellationFee : Decimal
+  - createdAt       : Timestamp
+  ..
+  + create(dto) : Booking
+  + accept(cost) : Booking
+  + reject(reason) : Booking
+  + startService() : Booking
+  + complete(finalCost) : Booking
+  + cancel() : Booking
+  + markPaid() : Booking
+}
+
+class EmergencyRequest {
+  - emergencyId        : UUID
+  - customerId         : UUID
+  - vehicleId          : UUID
+  - assignedGarageId   : UUID
+  - assignedMechanicId : UUID
+  - customerLatitude   : Decimal
+  - customerLongitude  : Decimal
+  - issueDescription   : String
+  - status             : EmergencyStatus
+  - searchRadiusKm     : Integer
+  - triggeredAt        : Timestamp
+  - assignedAt         : Timestamp
+  ..
+  + trigger(dto) : EmergencyRequest
+  + broadcastToGarages(list) : void
+  + assignFirstAccept(garageId) : EmergencyRequest
+  + expandRadius() : void
+  + dispatch(mechanicId) : EmergencyRequest
+  + markInProgress() : EmergencyRequest
+  + complete() : EmergencyRequest
+}
+
+class Review {
+  - reviewId   : UUID
+  - bookingId  : UUID <<UNIQUE>>
+  - customerId : UUID
+  - garageId   : UUID
+  - rating     : Integer
+  - reviewText : String
+  - createdAt  : Timestamp
+  ..
+  + submit(dto) : Review
+  + validateContent(text) : Boolean
+  + updateGarageRating(garageId) : void
+}
+
+class Admin {
+  - adminId      : UUID
+  - email        : String
+  - passwordHash : String
+  - role         : UserRole
+  ..
+  + approveGarage(id) : Garage
+  + rejectGarage(id, reason) : Garage
+  + suspendAccount(userId) : void
+  + resolveComplaint(id) : void
+}
+
+class Invoice {
+  - invoiceId   : UUID
+  - bookingId   : UUID <<UNIQUE>>
+  - totalAmount : Decimal
+  - issuedAt    : Timestamp
+  - fileUrl     : String
+  ..
+  + generate(bookingId) : Invoice
+}
+
+class Notification {
+  - notificationId : UUID
+  - recipientId    : UUID
+  - type           : NotificationType
+  - payload        : JSON
+  - sentAt         : Timestamp
+  - isDelivered    : Boolean
+  ..
+  + send(recipientId, type, payload) : void
+  + retry(id) : Boolean
+}
+
+'=== RELATIONSHIPS ===========================================
+Customer "1" *-down- "0..*" Vehicle         : owns >
+Customer "1" -right- "0..*" Booking         : places >
+Customer "1" -right- "0..*" EmergencyRequest : triggers >
+Customer "1" -down-  "0..*" Review          : submits >
+
+GarageOwner "1" -down- "1"     Garage       : manages >
+Garage      "1" o-right- "1..*" Mechanic    : employs >
+Garage      "1" -left-  "0..*" Booking      : fulfils >
+Garage      "1" -left-  "0..*" EmergencyRequest : receives >
+
+Vehicle "1" -right- "0..*" Booking          : used in >
+Vehicle "1" -right- "0..*" EmergencyRequest : involved in >
+
+Booking "1" -down- "0..1" Review            : reviewed by >
+Booking "1" -down- "0..1" Invoice           : generates >
+
+Mechanic "0..1" -down- "0..1" EmergencyRequest : dispatched to >
+
+Review "0..*" .right.> Garage : updates rating
+
+Booking          ..  BookingStatus
+EmergencyRequest ..  EmergencyStatus
+Garage           ..  GarageStatus
+Notification     ..  NotificationType
+
+@enduml
