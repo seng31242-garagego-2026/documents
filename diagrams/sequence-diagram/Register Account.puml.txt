@@ -1,0 +1,59 @@
+@startuml
+title SSD - Register Account
+
+actor "User (App)" as User
+
+participant "Customer App" as App
+participant "API Server" as API
+participant "AuthService" as AuthService
+database "PostgreSQL DB" as DB
+participant "Twilio" as Twilio
+collections "Redis" as Redis
+
+User -> App : Open registration screen\nEnter fullName, phone,\nemail, NIC, password
+
+App -> API : POST /auth/register\n{fullName, phone, email,\nnicNumber, password}
+
+API -> AuthService : validateRegistrationInput(dto)
+
+AuthService -> DB : checkEmailUnique(email)\ncheckPhoneUnique(phone)
+
+DB --> AuthService : unique = true
+
+AuthService -> AuthService : hashPassword(BCrypt cost 12)\n(NFR-S2)
+
+AuthService -> AuthService : encryptNIC(AES-256)
+
+AuthService -> DB : INSERT INTO customers(...)
+
+AuthService -> Twilio : sendOTP(phone)
+
+Twilio -> Redis : Store OTP\n6-digit code, TTL = 5 min
+
+API --> App : HTTP 201 Created\n{customerId,\nmessage:"OTP sent"}
+
+User -> App : Enter OTP received via SMS
+
+App -> API : POST /auth/verify-otp\n{customerId, otp}
+
+API -> AuthService : verifyOTP(customerId, otp)
+
+AuthService -> Redis : Check OTP validity\nand TTL
+
+Redis --> AuthService : OTP valid
+
+AuthService -> DB : UPDATE customers\nSET isActive = true
+
+API --> App : HTTP 200 OK\n{accessToken,\nrefreshToken}
+
+App --> User : Redirect to Home Dashboard
+
+alt Invalid or Expired OTP
+    AuthService -> Redis : Check OTP validity
+    
+    Redis --> AuthService : OTP invalid / expired
+    
+    API --> App : HTTP 400 Bad Request\n{message:"Invalid or expired OTP"}
+end
+
+@enduml

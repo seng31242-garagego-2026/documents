@@ -1,0 +1,55 @@
+@startuml
+title SSD - Register Garage & Admin Garage Approval
+
+actor GarageOwner
+actor Admin
+
+participant "GarageOwner App" as GOApp
+participant "API Server" as API
+participant "GarageService" as GarageService
+database "PostgreSQL DB" as DB
+participant "Cloudinary / S3" as Storage
+participant "Admin Dashboard" as AdminDashboard
+participant "AdminService" as AdminService
+participant "NotificationService" as NotificationService
+
+GarageOwner -> GOApp : Open garage registration form\nEnter business details and upload documents
+
+GOApp -> API : POST /garages/register\nMultipart form:\n{businessName, registrationNo,\naddress, lat, lng,\nworkingHours, capacity,\nphotos, documents}
+
+API -> GarageService : validateGarageRegistration(dto)
+
+GarageService -> Storage : uploadDocuments(files)
+Storage --> GarageService : document URLs
+
+GarageService -> DB : INSERT INTO garages (...)\nstatus = PENDING
+
+API --> GOApp : HTTP 201 Created\n{garageId, status:PENDING}
+
+API -> AdminDashboard : Notification:\n"New garage registration pending review"
+
+Admin -> AdminDashboard : Open pending registration\nReview documents
+
+AdminDashboard -> API : PUT /admin/garages/{id}/approve\n{action:"APPROVE"}
+
+API -> AdminService : approveGarage(garageId, adminId)
+
+AdminService -> DB : UPDATE garages\nSET status = APPROVED
+
+AdminService -> NotificationService : sendEmail(garageOwner,\n"Garage approved")
+
+API --> AdminDashboard : HTTP 200 OK
+
+alt Admin rejects registration
+    AdminDashboard -> API : PUT /admin/garages/{id}/approve\n{action:"REJECT", reason}
+    
+    API -> AdminService : rejectGarage(garageId, adminId, reason)
+    
+    AdminService -> DB : UPDATE garages\nSET status = PENDING\nrejectionReason = reason
+    
+    AdminService -> NotificationService : sendEmail(garageOwner,\n"Garage rejected")
+    
+    API --> AdminDashboard : HTTP 200 OK
+end
+
+@enduml
