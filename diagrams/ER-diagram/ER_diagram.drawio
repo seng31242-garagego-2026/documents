@@ -1,143 +1,313 @@
-@startuml component_diagram
-'=============================================================
-' GarageGo – Component / Package Diagram
-' SDS §3 | SRS v0.1
-'=============================================================
-skinparam defaultFontName  Arial
-skinparam defaultFontSize  12
-skinparam dpi              150
-skinparam backgroundColor  #FFFFFF
-skinparam shadowing        false
-skinparam roundcorner      8
-skinparam ArrowThickness   1.5
-skinparam Padding          6
-skinparam nodesep          50
-skinparam ranksep          55
-skinparam linetype         polyline
+@startuml GarageGo_ER_Full
 
-skinparam package {
-  BackgroundColor #EBF3FB
-  BorderColor     #2E6DA4
-  FontColor       #1F3864
-  FontStyle       bold
-  FontSize        13
-}
-skinparam component {
-  BackgroundColor #D9E8FB
-  BorderColor     #2E6DA4
-  FontColor       #1A1A1A
-  FontSize        12
-}
-skinparam database {
-  BackgroundColor #FFF2CC
-  BorderColor     #BF8F00
-  FontColor       #1A1A1A
-  FontSize        12
-}
-skinparam cloud {
-  BackgroundColor #E2EFDA
-  BorderColor     #4E8B3F
-  FontColor       #1A1A1A
-  FontSize        12
-}
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam dpi 150
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam linetype polyline
+
+' ================= ENTITY STYLE =================
 skinparam rectangle {
-  BackgroundColor #F4ECFA
-  BorderColor     #7B3FA3
-  FontColor       #1A1A1A
-  FontSize        12
+  BackgroundColor #D5E8D4
+  BorderColor #2E7D32
+  BorderThickness 2
+  FontStyle bold
 }
 
-title GarageGo -- Component / Package Diagram
-
-package "Presentation Layer  (React Native / React.js)" as PRES {
-  component "[Customer App]"     as CA
-  component "[Garage Owner App]" as GOA
-  component "[Mechanic App]"     as MA
-  component "[Admin Dashboard]"  as AD
+' ================= ATTRIBUTE STYLE =================
+skinparam usecase {
+  BackgroundColor white
+  BorderColor #555555
+  FontSize 11
 }
 
-rectangle "Nginx  (TLS 1.2+  |  HTTP -> HTTPS)" as NGINX
-
-package "API Layer  (Node.js 20 / Express)" as API {
-  component "[REST API Server]\n/api/v1/*  JWT  RBAC\nJoi Validation" as REST
-  component "[Socket.io Server]\nWSS  Rooms  Events" as SOCK
+' ================= RELATIONSHIP STYLE =================
+skinparam hexagon {
+  BackgroundColor #BBDEFB
+  BorderColor #1565C0
+  FontColor #0D47A1
+  FontStyle bold
 }
 
-package "Business Logic Layer" as BL {
-  component "[AuthService]\nOTP  JWT  BCrypt"        as AUTH
-  component "[BookingService]\nState Machine  Capacity" as BOOK
-  component "[EmergencyService]\nSOS  First-Accept Lock"  as EMER
-  component "[GarageService]\nRegistration  Geocode"   as GAR
-  component "[MechanicService]\nDispatch  GPS Update"  as MECHS
-  component "[ReviewService]\nRating  Validation"      as REV
-  component "[NotificationService]\nFCM  SMS"           as NOTIF
-  component "[AdminService]\nApproval  Suspension"     as ADMS
-}
+title GarageGo - Complete Chen ER Diagram
 
-package "Data Access Layer  (node-postgres / Sequelize)" as DAL {
-  component "[Repository]\nParameterised Queries\nPool max 20" as REPO
-}
+' ================= ENTITIES =================
+rectangle CUSTOMER as CUST
+rectangle VEHICLE as VEH
+rectangle GARAGE as GAR
+rectangle GARAGE_OWNER as GOWN
+rectangle MECHANIC as MECH
+rectangle BOOKING as BOOK
+rectangle EMERGENCY_REQUEST as EMER
+rectangle REVIEW as REV
+rectangle NOTIFICATION as NOTIF
+rectangle ADMIN as ADM
 
-package "Persistence Layer" as PERS {
-  database "PostgreSQL 15\nPartitioned bookings\n(NFR-SC2)" as PG
-  database "Redis 7\nSessions  OTP TTL\nPub/Sub  Cache" as RD
-}
+' ================= RELATIONSHIPS =================
+hexagon "OwnsVehicle" as R1
+hexagon "PlacesBooking" as R2
+hexagon "GarageOwnerManagesGarage" as R3
+hexagon "Employs" as R4
+hexagon "BookingUsesVehicle" as R5
+hexagon "BookingAtGarage" as R6
+hexagon "TriggersEmergency" as R7
+hexagon "EmergencyUsesVehicle" as R8
+hexagon "EmergencyAssignedGarage" as R9
+hexagon "EmergencyHandledByMechanic" as R10
+hexagon "WritesReview" as R11
+hexagon "ReviewForBooking" as R12
+hexagon "SendsNotification" as R13
 
-cloud "External Services" as EXT {
-  component "[Google Maps Platform]" as GMAP
-  component "[Twilio SMS]"           as TWIL
-  component "[Firebase FCM]"         as FCM
-  component "[Cloudinary / S3]"      as STOR
-}
+' ================= CUSTOMER =================
+usecase "<u>customerId (PK)</u>" as C1
+usecase "fullName" as C2
+usecase "phone" as C3
+usecase "email" as C4
+usecase "passwordHash" as C5
+usecase "isActive" as C6
+usecase "createdAt" as C7
 
-CA  -down-> NGINX : HTTPS / WSS
-GOA -down-> NGINX : HTTPS / WSS
-MA  -down-> NGINX : HTTPS / WSS
-AD  -down-> NGINX : HTTPS
+CUST --- C1
+CUST --- C2
+CUST --- C3
+CUST --- C4
+CUST --- C5
+CUST --- C6
+CUST --- C7
 
-NGINX -down-> REST
-NGINX -down-> SOCK
+' ================= VEHICLE =================
+usecase "<u>vehicleId (PK)</u>" as V1
+usecase "vehicleType" as V2
+usecase "brand" as V3
+usecase "model" as V4
+usecase "year" as V5
+usecase "fuelType" as V6
+usecase "transmissionType" as V7
+usecase "registrationNo" as V8
+usecase "notes" as V9
 
-REST -down-> AUTH
-REST -down-> BOOK
-REST -down-> EMER
-REST -down-> GAR
-REST -down-> MECHS
-REST -down-> REV
-REST -down-> ADMS
-REST -right-> NOTIF
+VEH --- V1
+VEH --- V2
+VEH --- V3
+VEH --- V4
+VEH --- V5
+VEH --- V6
+VEH --- V7
+VEH --- V8
+VEH --- V9
 
-SOCK -right-> EMER : SOS broadcast\nGPS relay
-SOCK -down->  RD   : socket.io-redis\nPub/Sub
+' ================= GARAGE OWNER =================
+usecase "<u>ownerId (PK)</u>" as O1
+usecase "email" as O2
+usecase "phone" as O3
+usecase "passwordHash" as O4
+usecase "isVerified" as O5
 
-AUTH  -down-> REPO
-BOOK  -down-> REPO
-EMER  -down-> REPO
-GAR   -down-> REPO
-MECHS -down-> REPO
-REV   -down-> REPO
-ADMS  -down-> REPO
-AUTH  -right-> RD : OTP TTL
+GOWN --- O1
+GOWN --- O2
+GOWN --- O3
+GOWN --- O4
+GOWN --- O5
 
-REPO -down-> PG
-REPO -down-> RD
+' ================= GARAGE =================
+usecase "<u>garageId (PK)</u>" as G1
+usecase "ownerAccountId (FK)" as G2
+usecase "businessName" as G3
+usecase "registrationNo" as G4
+usecase "address" as G5
+usecase "latitude" as G6
+usecase "longitude" as G7
+usecase "emergencyZoneRadius" as G8
+usecase "status" as G9
+usecase "averageRating" as G10
+usecase "workingHours" as G11
+usecase "acceptedVehicleTypes" as G12
+usecase "capacity2W" as G13
+usecase "capacity4W" as G14
+usecase "capacityHeavy" as G15
+usecase "hasEmergencyService" as G16
 
-NOTIF -right-> FCM
-NOTIF -right-> TWIL
-GAR   -right-> GMAP : Geocode
-EMER  -right-> GMAP : Nearby  ETA
-GAR   -right-> STOR : File upload
+GAR --- G1
+GAR --- G2
+GAR --- G3
+GAR --- G4
+GAR --- G5
+GAR --- G6
+GAR --- G7
+GAR --- G8
+GAR --- G9
+GAR --- G10
+GAR --- G11
+GAR --- G12
+GAR --- G13
+GAR --- G14
+GAR --- G15
+GAR --- G16
 
-note bottom of SOCK
-  Redis Pub/Sub fan-out enables Socket.io
-  across N scaled instances
-  (NFR-SC1 : >= 500 concurrent WSS)
-end note
+' ================= MECHANIC =================
+usecase "<u>mechanicId (PK)</u>" as M1
+usecase "garageId (FK)" as M2
+usecase "fullName" as M3
+usecase "phone" as M4
+usecase "passwordHash" as M5
+usecase "isAvailable" as M6
+usecase "currentLatitude" as M7
+usecase "currentLongitude" as M8
+usecase "lastLocationAt" as M9
 
-note bottom of PG
-  PARTITION BY RANGE(scheduledAt)
-  Monthly partitions via pg-cron
-  (NFR-SC2 : query <= 500 ms at 100k+)
-end note
+MECH --- M1
+MECH --- M2
+MECH --- M3
+MECH --- M4
+MECH --- M5
+MECH --- M6
+MECH --- M7
+MECH --- M8
+MECH --- M9
+
+' ================= BOOKING =================
+usecase "<u>bookingId (PK)</u>" as B1
+usecase "customerId (FK)" as B2
+usecase "vehicleId (FK)" as B3
+usecase "garageId (FK)" as B4
+usecase "serviceType" as B5
+usecase "scheduledAt" as B6
+usecase "status" as B7
+usecase "estimatedCost" as B8
+usecase "finalCost" as B9
+usecase "paymentStatus" as B10
+usecase "cancellationFee" as B11
+usecase "notes" as B12
+usecase "createdAt" as B13
+usecase "updatedAt" as B14
+
+BOOK --- B1
+BOOK --- B2
+BOOK --- B3
+BOOK --- B4
+BOOK --- B5
+BOOK --- B6
+BOOK --- B7
+BOOK --- B8
+BOOK --- B9
+BOOK --- B10
+BOOK --- B11
+BOOK --- B12
+BOOK --- B13
+BOOK --- B14
+
+' ================= EMERGENCY =================
+usecase "<u>emergencyId (PK)</u>" as E1
+usecase "customerId (FK)" as E2
+usecase "vehicleId (FK)" as E3
+usecase "assignedGarageId (FK)" as E4
+usecase "assignedMechanicId (FK)" as E5
+usecase "customerLatitude" as E6
+usecase "customerLongitude" as E7
+usecase "issueDescription" as E8
+usecase "status" as E9
+usecase "searchRadiusKm" as E10
+usecase "triggeredAt" as E11
+usecase "assignedAt" as E12
+usecase "completedAt" as E13
+
+EMER --- E1
+EMER --- E2
+EMER --- E3
+EMER --- E4
+EMER --- E5
+EMER --- E6
+EMER --- E7
+EMER --- E8
+EMER --- E9
+EMER --- E10
+EMER --- E11
+EMER --- E12
+EMER --- E13
+
+' ================= REVIEW =================
+usecase "<u>reviewId (PK)</u>" as Rv1
+usecase "bookingId (FK UNIQUE)" as Rv2
+usecase "customerId (FK)" as Rv3
+usecase "garageId (FK)" as Rv4
+usecase "rating" as Rv5
+usecase "reviewText" as Rv6
+usecase "createdAt" as Rv7
+
+REV --- Rv1
+REV --- Rv2
+REV --- Rv3
+REV --- Rv4
+REV --- Rv5
+REV --- Rv6
+REV --- Rv7
+
+' ================= NOTIFICATION =================
+usecase "<u>notificationId (PK)</u>" as N1
+usecase "recipientId" as N2
+usecase "type" as N3
+usecase "recipientRole" as N4
+usecase "payload" as N5
+usecase "isDelivered" as N6
+usecase "sentAt" as N7
+
+NOTIF --- N1
+NOTIF --- N2
+NOTIF --- N3
+NOTIF --- N4
+NOTIF --- N5
+NOTIF --- N6
+NOTIF --- N7
+
+' ================= ADMIN =================
+usecase "<u>adminId (PK)</u>" as A1
+usecase "email" as A2
+usecase "role" as A3
+
+ADM --- A1
+ADM --- A2
+ADM --- A3
+
+' ================= RELATIONSHIPS =================
+
+CUST "1" --- R1
+R1 "N" --- VEH
+
+CUST "1" --- R2
+R2 "N" --- BOOK
+
+GOWN "1" --- R3
+R3 "N" --- GAR
+
+GAR "1" --- R4
+R4 "N" --- MECH
+
+BOOK "1" --- R5
+R5 "N" --- VEH
+
+BOOK "1" --- R6
+R6 "N" --- GAR
+
+CUST "1" --- R7
+R7 "N" --- EMER
+
+VEH "1" --- R8
+R8 "N" --- EMER
+
+GAR "1" --- R9
+R9 "N" --- EMER
+
+MECH "1" --- R10
+R10 "N" --- EMER
+
+BOOK "1" --- R11
+R11 "1" --- REV
+
+BOOK "1" --- R12
+R12 "1" --- REV
+
+ADM "1" --- R13
+R13 "N" --- NOTIF
 
 @enduml
